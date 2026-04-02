@@ -1,6 +1,10 @@
 let userWarmUpResponse = '';
 let userWarmUpFollowUp = '';
 
+const GEMINI_MODEL = 'gemini-3.1-pro-preview';
+const GEMINI_API_KEY = window.GEMINI_API_KEY || 'AIzaSyDaCmCfYq1r1eLbsJphtd5YfO9Q0lzuBEU';
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
 const state = {
   currentSlide: 0,
   reveals: { '1.1': 0, '2.1': 0 },
@@ -175,16 +179,71 @@ function wireSlideSpecificHandlers(slideId) {
     userWarmUpFollowUp = e.target.value;
   });
 
-  submitBtn?.addEventListener('click', () => {
+  submitBtn?.addEventListener('click', async () => {
     userWarmUpResponse = input.value.trim();
     if (!userWarmUpResponse) {
       input.focus();
       return;
     }
 
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Thinking...';
+
+    const aiFollowUp = await requestGeminiFollowUp(userWarmUpResponse);
     state.slide12Submitted = true;
     render();
+
+    const renderedFeedbackCard = document.getElementById('warmup-feedback');
+    if (renderedFeedbackCard) {
+      renderedFeedbackCard.innerHTML = `
+        Thank you for sharing. I hear the tensions and priorities in your classroom context.
+        <br><br><strong>Follow-up:</strong> ${escapeHtml(aiFollowUp)}
+      `;
+    }
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit';
   });
+}
+
+async function requestGeminiFollowUp(userText) {
+  const prompt = `
+You are coaching an ELT teacher in Haiti using Kolb's reflective cycle.
+Given the teacher's response below, provide exactly one short follow-up question that helps them deepen reflection.
+Keep it to one sentence and under 30 words.
+
+Teacher response:
+${userText}
+`.trim();
+
+  try {
+    const response = await fetch(GEMINI_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 60,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Gemini request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    if (!text) {
+      throw new Error('Gemini response did not contain text.');
+    }
+
+    return text;
+  } catch (error) {
+    console.error('Gemini API error:', error);
+    return "Which one challenge currently has the biggest impact on student learning, and what makes it so significant right now?";
+  }
 }
 
 render();
