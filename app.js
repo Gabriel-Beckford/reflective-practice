@@ -1,6 +1,13 @@
 import { callGemini } from "./src/ai/gemini.js";
 import { createSection1WarmupController } from "./src/controllers/section1WarmupController.js";
 import { createSection5Controller } from "./src/controllers/section5Controller.js";
+import {
+  bindInteraction,
+  createFeedbackPlaceholder,
+  renderInteraction,
+  validateInteraction
+} from "./src/interactions/activityInteractions.js";
+import { createResponsePayload, getResponseValue } from "./src/interactions/responsePayload.js";
 
 const slides = [
   {
@@ -85,12 +92,16 @@ const slides = [
     section: 3,
     title: "Section 3 · Reflection Prompt",
     type: "question",
-    interactionType: "textarea",
-    revealSteps: ["What new perspective feels most useful right now?"],
+    interactionType: "descriptorToggles",
+    interactionConfig: {
+      prompt: "Mark each descriptor Yes/No based on your current perspective.",
+      descriptors: ["Clear", "Actionable", "Compassionate", "Grounded"]
+    },
+    revealSteps: ["Use the descriptor toggles to map the quality of your perspective."],
     required: {
-      type: "minLength",
-      value: 15,
-      message: "Write a short reflection to move forward."
+      type: "minSelections",
+      value: 1,
+      message: "Set at least one descriptor to Yes before continuing."
     },
     next: "s4-orientation"
   },
@@ -110,12 +121,16 @@ const slides = [
     section: 4,
     title: "Section 4 · Reflection Prompt",
     type: "question",
-    interactionType: "textarea",
-    revealSteps: ["Which strength showed up for you today?"],
+    interactionType: "descriptorToggles",
+    interactionConfig: {
+      prompt: "Reuse the same descriptors for your strengths check.",
+      descriptors: ["Clear", "Actionable", "Compassionate", "Grounded"]
+    },
+    revealSteps: ["Which strengths are visible in your current reflection state?"],
     required: {
-      type: "minLength",
-      value: 12,
-      message: "Add a specific strength example to continue."
+      type: "minSelections",
+      value: 1,
+      message: "Set at least one descriptor to Yes before continuing."
     },
     next: "s5-orientation"
   },
@@ -267,7 +282,13 @@ function validateQuestionSlide(slide) {
     };
   }
 
-  const response = (appState.responses[slide.id] || "").trim();
+  if (
+    ["singleSelectMcq", "multiSelectMcq", "descriptorToggles", "shortAnswer", "tapToMatch"].includes(slide.interactionType)
+  ) {
+    return validateInteraction(slide, appState.responses[slide.id] || null);
+  }
+
+  const response = String(getResponseValue(appState.responses[slide.id]) || "").trim();
 
   if (slide.required?.type === "minLength") {
     const isValid = response.length >= slide.required.value;
@@ -346,7 +367,15 @@ function renderQuestionInput(slide) {
     return renderChatInput(slide);
   }
 
+  if (["singleSelectMcq", "multiSelectMcq", "descriptorToggles", "shortAnswer", "tapToMatch"].includes(slide.interactionType)) {
+    return renderInteraction(slide, appState.responses[slide.id] || null);
+  }
+
   const validation = validateQuestionSlide(slide);
+  const existingResponse = appState.responses[slide.id];
+  const currentValue = typeof existingResponse === "object" ? getResponseValue(existingResponse) : existingResponse;
+  const localFeedback =
+    existingResponse?.localFeedback || createFeedbackPlaceholder(slide, validation);
   return `
     <label for="response-input-${slide.id}">Your response</label>
     <textarea
@@ -355,8 +384,8 @@ function renderQuestionInput(slide) {
       rows="4"
       aria-label="Response for ${slide.title}"
       placeholder="Type your reflection here"
-    >${appState.responses[slide.id] || ""}</textarea>
-    <p id="validation-message-${slide.id}" class="validation-message" role="status" aria-live="polite">${validation.message}</p>
+    >${currentValue || ""}</textarea>
+    <p id="validation-message-${slide.id}" class="validation-message" role="status" aria-live="polite">${localFeedback}</p>
   `;
 }
 
@@ -426,13 +455,29 @@ function bindQuestionInput(slide) {
     return;
   }
 
+  if (["singleSelectMcq", "multiSelectMcq", "descriptorToggles", "shortAnswer", "tapToMatch"].includes(slide.interactionType)) {
+    bindInteraction(slide, appState.responses[slide.id] || null, (payload) => {
+      appState.responses[slide.id] = payload;
+    });
+    return;
+  }
+
   const textarea = document.getElementById(`response-input-${slide.id}`);
   const validationNode = document.getElementById(`validation-message-${slide.id}`);
 
   textarea.addEventListener("input", (event) => {
-    appState.responses[slide.id] = event.target.value;
-    const validation = validateQuestionSlide(slide);
-    validationNode.textContent = validation.message;
+    const value = event.target.value;
+    const validation = validateInteraction(slide, { value });
+    appState.responses[slide.id] = createResponsePayload({
+      slideId: slide.id,
+      interactionType: slide.interactionType,
+      value,
+      isValid: validation.valid,
+      localFeedback: createFeedbackPlaceholder(slide, validation),
+      metadata: { charCount: value.length },
+      event: "input"
+    });
+    validationNode.textContent = createFeedbackPlaceholder(slide, validation);
   });
 }
 
