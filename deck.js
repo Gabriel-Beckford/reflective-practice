@@ -3,11 +3,12 @@
   const STORAGE_KEY = "reflective-practice.deck-state.v1";
 
   function normalizeSavedState(saved) {
-    if (!saved || typeof saved !== "object") return { index: 0, responses: {} };
+    if (!saved || typeof saved !== "object") return { index: 0, responses: {}, completed: false };
 
     const normalized = {
       index: Number.isInteger(saved.index) ? saved.index : 0,
-      responses: {}
+      responses: {},
+      completed: Boolean(saved.completed)
     };
 
     if (saved.responses && typeof saved.responses === "object") {
@@ -35,11 +36,11 @@
   function loadPersistedState() {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { index: 0, responses: {} };
+      if (!raw) return { index: 0, responses: {}, completed: false };
       return normalizeSavedState(JSON.parse(raw));
     } catch (error) {
       console.warn("Unable to hydrate saved deck responses.", error);
-      return { index: 0, responses: {} };
+      return { index: 0, responses: {}, completed: false };
     }
   }
 
@@ -49,7 +50,8 @@
         STORAGE_KEY,
         JSON.stringify({
           index: state.index,
-          responses: state.responses
+          responses: state.responses,
+          completed: state.completed
         })
       );
     } catch (error) {
@@ -61,6 +63,7 @@
   const state = {
     index: Math.max(0, Math.min(persisted.index || 0, slides.length - 1)),
     responses: persisted.responses || {},
+    completed: Boolean(persisted.completed),
     beforeExportHook: null
   };
 
@@ -493,11 +496,6 @@
         btn.textContent = actionText;
         btn.addEventListener("click", () => {
           saveResponse(slide.id, slide.responseKey || `cta_${slide.id}`, index);
-          if (slide.branching?.length) {
-            jumpTo(resolveNextIndex(slide));
-            return;
-          }
-          if (state.index < slides.length - 1) jumpTo(state.index + 1);
         });
         actionList.appendChild(btn);
       });
@@ -577,16 +575,6 @@
     render();
   }
 
-  function resolveNextIndex(slide) {
-    const selected = getResponse(slide.id, slide.responseKey, []);
-    if (slide.branching && slide.branching.length) {
-      for (const branch of slide.branching) {
-        if (matchesCorrect(selected, branch.ifSelected || [])) return branch.to;
-      }
-    }
-    return state.index + 1;
-  }
-
   function render() {
     const slide = slides[state.index];
     const interactionType = resolveInteractionType(slide);
@@ -626,11 +614,23 @@
 
     el.section.textContent = slide.section;
     el.slideId.textContent = `Slide ${slide.id}`;
-    el.counter.textContent = `Slide ${state.index + 1} / ${slides.length}`;
+    el.counter.textContent = `Slide ${state.index + 1} of ${slides.length}`;
     el.progress.style.width = `${((state.index + 1) / slides.length) * 100}%`;
 
     el.prev.disabled = state.index === 0;
-    el.next.textContent = state.index === slides.length - 1 ? "Finish" : "Next";
+    el.next.textContent = state.index === slides.length - 1 ? "Submit" : "Next";
+
+    const completionMessageId = "completion-message";
+    const existingMessage = document.getElementById(completionMessageId);
+    if (existingMessage) existingMessage.remove();
+    if (state.completed && slide.id === "7.2") {
+      const completionMessage = document.createElement("p");
+      completionMessage.id = completionMessageId;
+      completionMessage.className = "completion-message";
+      completionMessage.textContent =
+        "Thank you for completing this session. Your responses have been recorded. See you in the next lesson!";
+      card.appendChild(completionMessage);
+    }
   }
 
   el.prev.addEventListener("click", () => jumpTo(state.index - 1));
@@ -644,16 +644,17 @@
       return;
     }
 
-    const currentSlide = slides[state.index];
-
     if (state.index === slides.length - 1) {
+      state.completed = true;
+      persistState(state);
       const payload = window.deckHooks.exportResponses();
       if (typeof state.beforeExportHook === "function") state.beforeExportHook(payload);
       window.dispatchEvent(new CustomEvent("deck:complete", { detail: payload }));
+      render();
       return;
     }
 
-    jumpTo(resolveNextIndex(currentSlide));
+    jumpTo(state.index + 1);
   });
 
   window.deckHooks = {
