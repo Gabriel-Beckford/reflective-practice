@@ -201,7 +201,23 @@
   function createYesNoMatrix(slide) {
     const wrap = document.createElement("div");
     wrap.className = "choice-list";
-    const saved = getResponse(slide.id, slide.responseKey, {});
+    const saved = { ...getResponse(slide.id, slide.responseKey, {}) };
+    const expectedAnswers = Array.isArray(slide.expectedAnswers) ? slide.expectedAnswers : [];
+
+    const paintRowState = (row, rowIndex) => {
+      const expected = expectedAnswers[rowIndex];
+      const selected = saved[rowIndex];
+
+      [...row.children].forEach((node) => {
+        const isChosen = node.dataset.choice === selected;
+        node.classList.toggle("selected", isChosen);
+        node.classList.remove("correct", "incorrect");
+
+        if (!expected || !selected) return;
+        if (node.dataset.choice === expected) node.classList.add("correct");
+        if (isChosen && selected !== expected) node.classList.add("incorrect");
+      });
+    };
 
     slide.statements.forEach((statement, index) => {
       const group = document.createElement("div");
@@ -218,7 +234,7 @@
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "choice-item";
-        btn.classList.toggle("selected", saved[index] === choice);
+        btn.dataset.choice = choice;
 
         const marker = document.createElement("span");
         marker.className = "choice-marker";
@@ -230,22 +246,56 @@
         btn.addEventListener("click", () => {
           saved[index] = choice;
           saveResponse(slide.id, slide.responseKey, saved);
-          [...row.children].forEach((node) => node.classList.remove("selected"));
-          btn.classList.add("selected");
-          renderFeedback(slide, []);
+          paintRowState(row, index);
+          renderYesNoFeedback(slide, saved);
         });
 
         row.appendChild(btn);
       });
 
+      paintRowState(row, index);
       group.append(label, row);
       wrap.appendChild(group);
     });
 
+    renderYesNoFeedback(slide, saved);
     return wrap;
   }
 
+  function renderYesNoFeedback(slide, savedResponses) {
+    const card = document.getElementById("feedback-card");
+    if (!card) return;
+
+    const expectedAnswers = Array.isArray(slide.expectedAnswers) ? slide.expectedAnswers : [];
+    const answeredCount = slide.statements.reduce((count, _, index) => (savedResponses[index] ? count + 1 : count), 0);
+    const correctCount = expectedAnswers.reduce(
+      (count, expected, index) => (savedResponses[index] === expected ? count + 1 : count),
+      0
+    );
+    const allAnswered = answeredCount === slide.statements.length;
+    const allCorrect = allAnswered && correctCount === expectedAnswers.length;
+
+    const title = allCorrect ? "Evaluation complete" : "Keep evaluating";
+    const summary = `Row-by-row score: ${correctCount}/${expectedAnswers.length} matched the expected answer.`;
+    const body = allCorrect
+      ? `${summary} ${slide.feedbackSuccess || ""}`.trim()
+      : `${summary} ${slide.feedbackNeedsWork || "Continue checking each criterion row-by-row."}`.trim();
+
+    card.querySelector(".feedback-title").textContent = title;
+    card.querySelector(".feedback-body").textContent = body;
+    card.classList.add("visible");
+    card.classList.toggle("error", allAnswered && !allCorrect);
+  }
+
   function appendBodyCopy(target, slide) {
+    if (slide.fixedTextBlock) {
+      const block = document.createElement("pre");
+      block.className = "fixed-text-block";
+      block.textContent = (slide.body || []).join("\n\n");
+      target.appendChild(block);
+      return;
+    }
+
     (slide.body || []).forEach((line) => {
       const p = document.createElement("p");
       p.className = "slide-copy";
@@ -487,19 +537,23 @@
     title.className = "slide-question";
     title.textContent = slide.title;
 
-    card.append(badge, title);
-    const renderer = renderByInteractionType[interactionType] || renderTextSlide;
-    renderer(card, slide);
-
     const feedback = document.createElement("div");
     feedback.id = "feedback-card";
     feedback.className = "feedback-card";
     feedback.innerHTML = '<div class="feedback-title">Feedback</div><div class="feedback-body"></div>';
+
+    card.append(badge, title);
+    const renderer = renderByInteractionType[interactionType] || renderTextSlide;
+    renderer(card, slide);
     card.appendChild(feedback);
 
     if (getResponse(slide.id, getSubmitKey(slide), false)) {
       const seed = getResponse(slide.id, slide.responseKey, []);
       renderFeedback(slide, Array.isArray(seed) ? seed : []);
+    }
+    if (interactionType === "yes-no-matrix") {
+      const saved = getResponse(slide.id, slide.responseKey, {});
+      renderYesNoFeedback(slide, saved);
     }
 
     el.container.appendChild(card);
