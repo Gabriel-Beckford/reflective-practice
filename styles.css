@@ -380,6 +380,19 @@ main {
   color: var(--md-on-surface);
 }
 
+.submit-btn {
+  align-self: flex-start;
+  margin-top: 4px;
+  border: 1px solid var(--md-primary);
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 
 /* ==========================================================================
    CHOICE STATES — Selected, Correct, Incorrect
