@@ -488,7 +488,7 @@ window.DECK_DATA = {
       body: [
         "Throughout this deck, you've completed grounding activities, analysed micro-reflections, and made emotional connections to the material.",
         "Click below to download these insights as a PDF. Note: This is separate from the micro-reflection PDF you generated in the chatbot.",
-        "Call-to-Action: Download Deck Responses (Compiles the Warm-Up, Micro-Reflection Analysis, and Emotional Connection responses)."
+        "Call-to-Action: Download Deck Responses (Compiles Warm-Up, Micro-Reflection Analysis, Emotional Connection, and Closing 3-2-1 responses)."
       ]
     },
     {

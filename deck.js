@@ -341,6 +341,28 @@
     wrap.className = "text-renderer";
     appendBodyCopy(wrap, slide);
     appendOptionalList(wrap, slide);
+
+    if (slide.id === "6.1") {
+      const exportBtn = document.createElement("button");
+      exportBtn.type = "button";
+      exportBtn.className = "cta-btn";
+      exportBtn.textContent = "Download Deck Responses PDF";
+
+      const status = document.createElement("p");
+      status.className = "cta-subtext";
+
+      exportBtn.addEventListener("click", () => {
+        window.pdfExport.downloadPdf({
+          filename: "deck-reflections-export.pdf",
+          lines: buildDeckExportLines()
+        });
+        status.textContent =
+          "Downloaded deck-reflections-export.pdf. This file only includes 1.2, 2.14, 4.7, and 7.2 responses.";
+      });
+
+      wrap.append(exportBtn, status);
+    }
+
     card.appendChild(wrap);
   }
 
@@ -427,6 +449,32 @@
 
     wrap.appendChild(inputWrap);
     card.appendChild(wrap);
+  }
+
+  function buildDeckExportLines() {
+    const prompts = [
+      { id: "1.2", label: "Warm-up (Slide 1.2)" },
+      { id: "2.14", label: "Micro-Reflection Analysis (Slide 2.14)" },
+      { id: "4.7", label: "Emotional Connection (Slide 4.7)" },
+      { id: "7.2", label: "Closing 3-2-1 (Slide 7.2)" }
+    ];
+
+    const lines = [
+      "Deck Reflection Export",
+      `Generated: ${new Date().toISOString()}`,
+      ""
+    ];
+
+    prompts.forEach((item) => {
+      const slide = slides.find((entry) => entry.id === item.id);
+      const responseKey = slide?.responseKey;
+      const response = responseKey ? (getResponse(item.id, responseKey, "") || "").trim() : "";
+      lines.push(item.label);
+      lines.push(response || "No response captured.");
+      lines.push("");
+    });
+
+    return lines;
   }
 
   function renderCtaSlide(card, slide) {

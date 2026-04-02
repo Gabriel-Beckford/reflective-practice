@@ -227,6 +227,27 @@ function buildSummaryCards() {
   }).join("");
 }
 
+function buildChatbotExportLines() {
+  const lines = [
+    "CE/RO/AC/AE Conversation Summary",
+    `Generated: ${new Date().toISOString()}`,
+    `Mode: ${appState.mode}`,
+    `Peer sharing opt-in: ${appState.shareWithPeers ? "Yes" : "No"}`,
+    ""
+  ];
+
+  PHASES.forEach((phase) => {
+    lines.push(`${phase.key} - ${phase.label}`);
+    lines.push(`Summary: ${summarizePhase(appState.phaseResponses[phase.key])}`);
+    appState.phaseResponses[phase.key].forEach((response, idx) => {
+      lines.push(`  ${idx + 1}. ${response}`);
+    });
+    lines.push("");
+  });
+
+  return lines;
+}
+
 function renderSummaryScreen() {
   root.innerHTML = `
     <h1 class="chatbot-title">Reflection Summary</h1>
@@ -250,33 +271,13 @@ function renderSummaryScreen() {
   });
 
   document.getElementById("download-pdf").addEventListener("click", () => {
-    const now = new Date().toISOString().slice(0, 10);
-    const lines = [
-      "Micro-Reflection",
-      `Date: ${now}`,
-      `Mode: ${appState.mode}`,
-      `Peer sharing opt-in: ${appState.shareWithPeers ? "Yes" : "No"}`,
-      ""
-    ];
-
-    PHASES.forEach((phase) => {
-      lines.push(`${phase.key} - ${phase.label}`);
-      appState.phaseResponses[phase.key].forEach((response, idx) => {
-        lines.push(`  ${idx + 1}. ${response}`);
-      });
-      lines.push("");
+    window.pdfExport.downloadPdf({
+      filename: "chatbot-ce-ro-ac-ae-summary.pdf",
+      lines: buildChatbotExportLines()
     });
 
-    const blob = new Blob([lines.join("\n")], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "micro-reflection.pdf";
-    link.click();
-    URL.revokeObjectURL(url);
-
     document.getElementById("download-status").textContent =
-      "Downloaded micro-reflection.pdf. (File is generated from captured transcript content.)";
+      "Downloaded chatbot-ce-ro-ac-ae-summary.pdf. This is the chatbot conversation summary export.";
   });
 }
 
