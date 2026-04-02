@@ -134,22 +134,177 @@
     return wrap;
   }
 
+  function appendBodyCopy(target, slide) {
+    (slide.body || []).forEach((line) => {
+      const p = document.createElement("p");
+      p.className = "slide-copy";
+      p.textContent = line;
+      target.appendChild(p);
+    });
+  }
+
+  function appendOptionalList(target, slide) {
+    if (slide.listTitle) {
+      const listTitle = document.createElement("p");
+      listTitle.className = "slide-copy";
+      listTitle.textContent = slide.listTitle;
+      target.appendChild(listTitle);
+    }
+
+    if (!slide.bullets?.length) return;
+
+    const list = document.createElement("ul");
+    list.className = "slide-copy";
+    slide.bullets.forEach((item) => {
+      const li = document.createElement("li");
+      li.textContent = item;
+      list.appendChild(li);
+    });
+    target.appendChild(list);
+  }
+
+  function resolveInteractionType(slide) {
+    const legacyTypeMap = {
+      content: "text",
+      "single-choice": "single-choice",
+      "multi-choice": "multi-select",
+      "multi-yn": "yes-no-matrix",
+      input: "free-response"
+    };
+
+    return legacyTypeMap[slide.type] || slide.type || "text";
+  }
+
+  function renderTextSlide(card, slide) {
+    const wrap = document.createElement("section");
+    wrap.className = "text-renderer";
+    appendBodyCopy(wrap, slide);
+    appendOptionalList(wrap, slide);
+    card.appendChild(wrap);
+  }
+
+  function renderSingleChoice(card, slide) {
+    const wrap = document.createElement("section");
+    wrap.className = "single-choice-renderer";
+    if (slide.question) {
+      const q = document.createElement("p");
+      q.className = "slide-copy";
+      q.textContent = `Question: ${slide.question}`;
+      wrap.appendChild(q);
+    }
+    wrap.appendChild(createChoiceList(slide));
+    card.appendChild(wrap);
+  }
+
+  function renderMultiSelect(card, slide) {
+    const wrap = document.createElement("section");
+    wrap.className = "multi-select-renderer";
+    if (slide.question) {
+      const q = document.createElement("p");
+      q.className = "slide-copy";
+      q.textContent = `Question: ${slide.question}`;
+      wrap.appendChild(q);
+    }
+    wrap.appendChild(createChoiceList(slide, true));
+    card.appendChild(wrap);
+  }
+
+  function renderYesNoMatrix(card, slide) {
+    const wrap = document.createElement("section");
+    wrap.className = "yes-no-matrix-renderer";
+    if (slide.question) {
+      const q = document.createElement("p");
+      q.className = "slide-copy";
+      q.textContent = `Question: ${slide.question}`;
+      wrap.appendChild(q);
+    }
+    wrap.appendChild(createYesNoMatrix(slide));
+    card.appendChild(wrap);
+  }
+
+  function renderFreeResponse(card, slide) {
+    const wrap = document.createElement("section");
+    wrap.className = "free-response-renderer";
+    appendBodyCopy(wrap, slide);
+
+    const inputWrap = document.createElement("div");
+    inputWrap.className = "input-wrap";
+    const prompt = document.createElement("p");
+    prompt.className = "slide-copy";
+    prompt.textContent = slide.prompt || "";
+    const area = document.createElement("textarea");
+    area.value = getAnswer(slide.responseKey, "");
+    area.addEventListener("input", () => saveAnswer(slide.responseKey, area.value));
+    inputWrap.append(prompt, area);
+
+    wrap.appendChild(inputWrap);
+    card.appendChild(wrap);
+  }
+
+  function renderCtaSlide(card, slide) {
+    const wrap = document.createElement("section");
+    wrap.className = "cta-renderer";
+    appendBodyCopy(wrap, slide);
+
+    const actions = slide.actions || [];
+    if (actions.length) {
+      const actionList = document.createElement("div");
+      actionList.className = "choice-list";
+      actions.forEach((actionText, index) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "choice-item";
+        btn.textContent = actionText;
+        btn.addEventListener("click", () => {
+          saveAnswer(slide.responseKey || `cta_${slide.id}`, index);
+          if (slide.branching?.length) {
+            jumpTo(resolveNextIndex(slide));
+            return;
+          }
+          if (state.index < slides.length - 1) jumpTo(state.index + 1);
+        });
+        actionList.appendChild(btn);
+      });
+      wrap.appendChild(actionList);
+    }
+
+    card.appendChild(wrap);
+  }
+
+  function renderTransitionSlide(card, slide) {
+    const wrap = document.createElement("section");
+    wrap.className = "transition-renderer";
+    appendBodyCopy(wrap, slide);
+    card.appendChild(wrap);
+  }
+
+  const renderByInteractionType = {
+    text: renderTextSlide,
+    "single-choice": renderSingleChoice,
+    "multi-select": renderMultiSelect,
+    "yes-no-matrix": renderYesNoMatrix,
+    "free-response": renderFreeResponse,
+    cta: renderCtaSlide,
+    transition: renderTransitionSlide
+  };
+
   function validateCurrentSlide() {
     const slide = slides[state.index];
     const key = slide.responseKey;
     if (!key) return { valid: true };
+    const interactionType = resolveInteractionType(slide);
 
-    if (slide.type === "input") {
+    if (interactionType === "free-response") {
       const value = (getAnswer(key, "") || "").trim();
       if (!value) return { valid: false, message: "Please add your response before moving on." };
     }
 
-    if (["single-choice", "multi-choice"].includes(slide.type)) {
+    if (["single-choice", "multi-select"].includes(interactionType)) {
       const picked = getAnswer(key, []);
       if (!picked.length) return { valid: false, message: "Please select an option before moving on." };
     }
 
-    if (slide.type === "multi-yn") {
+    if (interactionType === "yes-no-matrix") {
       const entries = Object.values(getAnswer(key, {}));
       if (entries.length < slide.statements.length) {
         return { valid: false, message: "Please answer every statement before moving on." };
@@ -176,6 +331,7 @@
 
   function render() {
     const slide = slides[state.index];
+    const interactionType = resolveInteractionType(slide);
     el.container.innerHTML = "";
 
     const card = document.createElement("article");
@@ -190,55 +346,8 @@
     title.textContent = slide.title;
 
     card.append(badge, title);
-
-    if (slide.question) {
-      const q = document.createElement("p");
-      q.className = "slide-copy";
-      q.textContent = `Question: ${slide.question}`;
-      card.appendChild(q);
-    }
-
-    (slide.body || []).forEach((line) => {
-      const p = document.createElement("p");
-      p.className = "slide-copy";
-      p.textContent = line;
-      card.appendChild(p);
-    });
-
-    if (slide.listTitle) {
-      const listTitle = document.createElement("p");
-      listTitle.className = "slide-copy";
-      listTitle.textContent = slide.listTitle;
-      card.appendChild(listTitle);
-    }
-
-    if (slide.bullets?.length) {
-      const list = document.createElement("ul");
-      list.className = "slide-copy";
-      slide.bullets.forEach((item) => {
-        const li = document.createElement("li");
-        li.textContent = item;
-        list.appendChild(li);
-      });
-      card.appendChild(list);
-    }
-
-    if (slide.type === "single-choice") card.appendChild(createChoiceList(slide));
-    if (slide.type === "multi-choice") card.appendChild(createChoiceList(slide, true));
-    if (slide.type === "multi-yn") card.appendChild(createYesNoMatrix(slide));
-
-    if (slide.type === "input") {
-      const wrap = document.createElement("div");
-      wrap.className = "input-wrap";
-      const prompt = document.createElement("p");
-      prompt.className = "slide-copy";
-      prompt.textContent = slide.prompt || "";
-      const area = document.createElement("textarea");
-      area.value = getAnswer(slide.responseKey, "");
-      area.addEventListener("input", () => saveAnswer(slide.responseKey, area.value));
-      wrap.append(prompt, area);
-      card.appendChild(wrap);
-    }
+    const renderer = renderByInteractionType[interactionType] || renderTextSlide;
+    renderer(card, slide);
 
     const feedback = document.createElement("div");
     feedback.id = "feedback-card";
