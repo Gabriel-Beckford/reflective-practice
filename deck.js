@@ -87,6 +87,10 @@
     return Object.prototype.hasOwnProperty.call(slideResponses, fieldKey) ? slideResponses[fieldKey] : fallback;
   }
 
+  function getSubmitKey(slide) {
+    return `${slide.responseKey}__submitted`;
+  }
+
   function matchesCorrect(selected, correct = []) {
     if (!correct.length || !selected.length) return false;
     return selected.length === correct.length && selected.every((value, i) => value === correct[i]);
@@ -97,6 +101,7 @@
     wrap.className = "choice-list";
 
     const selected = new Set(getResponse(slide.id, slide.responseKey, []));
+    const isSubmitted = Boolean(getResponse(slide.id, getSubmitKey(slide), false));
 
     slide.options.forEach((option, index) => {
       const item = document.createElement("button");
@@ -126,27 +131,71 @@
 
         const nextSelection = [...selected].sort((a, b) => a - b);
         saveResponse(slide.id, slide.responseKey, nextSelection);
-        renderFeedback(slide, nextSelection);
+        saveResponse(slide.id, getSubmitKey(slide), false);
+        paintChoiceStates(wrap, slide, nextSelection, false);
+        hideFeedback();
       });
 
       wrap.appendChild(item);
     });
 
+    paintChoiceStates(wrap, slide, [...selected].sort((a, b) => a - b), isSubmitted);
     return wrap;
+  }
+
+  function hideFeedback() {
+    const card = document.getElementById("feedback-card");
+    if (!card) return;
+    card.classList.remove("visible", "error");
+  }
+
+  function paintChoiceStates(wrap, slide, selection, submitted) {
+    [...wrap.children].forEach((child, i) => {
+      child.classList.remove("correct", "incorrect", "selected");
+      child.classList.toggle("selected", selection.includes(i));
+      if (!submitted || !slide.correctAnswers) return;
+      if (slide.correctAnswers.includes(i)) child.classList.add("correct");
+      if (selection.includes(i) && !slide.correctAnswers.includes(i)) child.classList.add("incorrect");
+    });
   }
 
   function renderFeedback(slide, selection) {
     const card = document.getElementById("feedback-card");
-    if (!card || !slide.feedback) return;
+    if (!card) return;
 
-    card.querySelector(".feedback-body").textContent = slide.feedback;
-    card.classList.add("visible");
+    const selectedText = selection.length
+      ? selection.map((index) => slide.options?.[index]).filter(Boolean).join("; ")
+      : "No option selected.";
+    let body = `You selected: ${selectedText}.`;
+    let title = "Feedback";
+    let isError = false;
 
     if (slide.correctAnswers) {
       const okay = matchesCorrect(selection, slide.correctAnswers);
-      card.classList.toggle("error", !okay);
-      card.querySelector(".feedback-title").textContent = okay ? "Feedback" : "Check your answer";
+      title = okay ? "Correct" : "Not quite yet";
+      isError = !okay;
+      const statusLine = okay
+        ? "That is correct."
+        : `That is incorrect. Correct answer${slide.correctAnswers.length > 1 ? "s are" : " is"}: ${slide.correctAnswers
+            .map((index) => slide.options?.[index])
+            .filter(Boolean)
+            .join("; ")}.`;
+      body = `${statusLine} ${body}`;
     }
+
+    if (slide.rationaleByOption && selection.length === 1) {
+      const rationale = slide.rationaleByOption[selection[0]];
+      if (rationale) body = `${body} ${rationale}`;
+    }
+
+    if (slide.feedbackBridge) {
+      body = `${body} ${slide.feedbackBridge}`;
+    }
+
+    card.querySelector(".feedback-title").textContent = title;
+    card.querySelector(".feedback-body").textContent = body;
+    card.classList.add("visible");
+    card.classList.toggle("error", isError);
   }
 
   function createYesNoMatrix(slide) {
@@ -254,7 +303,9 @@
       q.textContent = `Question: ${slide.question}`;
       wrap.appendChild(q);
     }
-    wrap.appendChild(createChoiceList(slide));
+    const choiceList = createChoiceList(slide);
+    wrap.appendChild(choiceList);
+    wrap.appendChild(createSubmitButton(slide, choiceList));
     card.appendChild(wrap);
   }
 
@@ -267,8 +318,31 @@
       q.textContent = `Question: ${slide.question}`;
       wrap.appendChild(q);
     }
-    wrap.appendChild(createChoiceList(slide, true));
+    const choiceList = createChoiceList(slide, true);
+    wrap.appendChild(choiceList);
+    wrap.appendChild(createSubmitButton(slide, choiceList));
     card.appendChild(wrap);
+  }
+
+  function createSubmitButton(slide, choiceList) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "submit-btn";
+    btn.textContent = "Submit answer";
+    btn.addEventListener("click", () => {
+      const selection = getResponse(slide.id, slide.responseKey, []);
+      if (!selection.length) {
+        const card = document.getElementById("feedback-card");
+        card.classList.add("visible", "error");
+        card.querySelector(".feedback-title").textContent = "Hold on";
+        card.querySelector(".feedback-body").textContent = "Please select an option before submitting.";
+        return;
+      }
+      saveResponse(slide.id, getSubmitKey(slide), true);
+      paintChoiceStates(choiceList, slide, selection, true);
+      renderFeedback(slide, selection);
+    });
+    return btn;
   }
 
   function renderYesNoMatrix(card, slide) {
@@ -366,6 +440,9 @@
     if (["single-choice", "multi-select"].includes(interactionType)) {
       const picked = getResponse(slide.id, key, []);
       if (!picked.length) return { valid: false, message: "Please select an option before moving on." };
+      if (slide.correctAnswers && !getResponse(slide.id, getSubmitKey(slide), false)) {
+        return { valid: false, message: "Please submit your answer to view the formative feedback before moving on." };
+      }
     }
 
     if (interactionType === "yes-no-matrix") {
@@ -420,7 +497,7 @@
     feedback.innerHTML = '<div class="feedback-title">Feedback</div><div class="feedback-body"></div>';
     card.appendChild(feedback);
 
-    if (slide.feedback && getResponse(slide.id, slide.responseKey, null) !== null) {
+    if (getResponse(slide.id, getSubmitKey(slide), false)) {
       const seed = getResponse(slide.id, slide.responseKey, []);
       renderFeedback(slide, Array.isArray(seed) ? seed : []);
     }
