@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kolb Reflective Cycle Deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="header-left">
+        <span class="header-label">Kolb's Reflective Cycle</span>
+        <span class="header-section" id="section-label">Section</span>
+      </div>
+      <div class="slide-counter" id="slide-counter">Slide 1 / 1</div>
+      <div class="progress-track" aria-hidden="true">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </header>
+
+    <main>
+      <div id="slide-container" aria-live="polite"></div>
+    </main>
+
+    <footer>
+      <button class="nav-btn" id="prev-btn" type="button">Back</button>
+      <div class="slide-count" id="slide-id">Slide</div>
+      <button class="nav-btn primary" id="next-btn" type="button">Next</button>
+    </footer>
+
+    <script src="deck-data.js"></script>
+    <script src="deck.js"></script>
+  </body>
+</html>
