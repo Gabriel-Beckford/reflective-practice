@@ -413,6 +413,12 @@ main {
   display: flex;
 }
 
+.feedback-card.error {
+  background: #ffe8e6;
+  border: 1px solid #c5221f;
+  color: #7a1110;
+}
+
 @keyframes feedbackIn {
   from {
     opacity: 0;
