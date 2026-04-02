@@ -221,8 +221,8 @@ const appState = {
   currentSlideId: slides[0].id,
   currentRevealStep: 1,
   responses: {
-    s1-warmup: { transcript: [] },
-    s5-phases: { transcript: [], phases: {} }
+    "s1-warmup": { transcript: [] },
+    "s5-phases": { transcript: [], phases: {} }
   },
   conversationHistory: [],
   chatDrafts: {},
