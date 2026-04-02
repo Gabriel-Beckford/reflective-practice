@@ -106,6 +106,7 @@
         padding-left: 10px;
       }
 
+      input,
       textarea {
         width: 100%;
         min-height: 120px;
@@ -116,6 +117,22 @@
         font-size: 1rem;
         line-height: 1.5;
         resize: vertical;
+      }
+
+      .conn-status {
+        font-weight: 700;
+      }
+
+      .conn-status.connected {
+        color: #1b5e20;
+      }
+
+      .conn-status.failed {
+        color: #b71c1c;
+      }
+
+      .conn-status.connecting {
+        color: #7b5b00;
       }
 
       .actions {
@@ -184,6 +201,6 @@
     </main>
 
     <script src="pdf-export.js"></script>
-    <script src="chatbot.js"></script>
+    <script type="module" src="chatbot.js"></script>
   </body>
 </html>
