@@ -1,9 +1,11 @@
 let userWarmUpResponse = '';
 let userWarmUpFollowUp = '';
 
-const GEMINI_MODEL = 'gemini-3.1-pro-preview';
-const GEMINI_API_KEY = window.GEMINI_API_KEY || 'AIzaSyDaCmCfYq1r1eLbsJphtd5YfO9Q0lzuBEU';
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_API_KEY = typeof window.GEMINI_API_KEY === 'string' ? window.GEMINI_API_KEY.trim() : '';
+const GEMINI_API_URL = GEMINI_API_KEY
+  ? `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`
+  : '';
 
 const state = {
   currentSlide: 0,
@@ -222,6 +224,10 @@ function formatWarmupFeedback(message, isPending) {
 }
 
 async function requestGeminiFollowUp(userText) {
+  if (!GEMINI_API_URL) {
+    return buildLocalFollowUp(userText);
+  }
+
   const prompt = `
 You are coaching an ELT teacher in Haiti using Kolb's reflective cycle.
 Given the teacher's response below, provide exactly one short follow-up question that helps them deepen reflection.
@@ -253,13 +259,16 @@ ${userText}
   }
 
   if (!response.ok) {
+    if ([401, 403, 404, 429].includes(response.status)) {
+      return buildLocalFollowUp(userText);
+    }
     throw new Error(`Gemini request failed with status ${response.status}`);
   }
 
   const data = await response.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
   if (!text) {
-    throw new Error('Gemini response did not contain text.');
+    return buildLocalFollowUp(userText);
   }
 
   return normalizeFollowUpQuestion(text);
@@ -279,6 +288,21 @@ function normalizeFollowUpQuestion(text) {
   }
 
   return `${cleaned.replace(/[.!,;:]+$/, '')}?`;
+}
+
+function buildLocalFollowUp(userText) {
+  const cleaned = userText.replace(/\s+/g, ' ').trim();
+  const topic = cleaned
+    .replace(/^\d+[\).\s-]*/, '')
+    .split(/[.!?]/)[0]
+    .slice(0, 80)
+    .trim();
+
+  const prompt = topic
+    ? `What is one small change you can test next lesson for "${topic}", and what evidence will show it helped?`
+    : 'What one small change will you test next lesson, and what evidence will show that it improved student learning?';
+
+  return normalizeFollowUpQuestion(prompt);
 }
 
 render();
