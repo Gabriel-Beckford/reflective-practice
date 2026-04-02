@@ -44,10 +44,10 @@ export function validateInteraction(slide, response) {
 
 export function createFeedbackPlaceholder(slide, validation) {
   if (!validation.valid) {
-    return validation.message;
+    return `⚠ ${validation.message}`;
   }
 
-  return `Saved locally. AI feedback for ${slide.title} is pending...`;
+  return `✓ Saved locally. AI feedback for ${slide.title} is pending...`;
 }
 
 function createPayload(slide, value, metadata = {}, event = "input") {
@@ -125,6 +125,7 @@ export function renderInteraction(slide, response) {
                 class="descriptor-chip ${state ? "is-active" : ""}"
                 data-descriptor-key="${escapeHtml(descriptor.key)}"
                 aria-pressed="${state ? "true" : "false"}"
+                aria-label="${escapeHtml(descriptor.label)} set to ${state ? "Yes" : "No"}"
               >
                 ${escapeHtml(descriptor.label)}: ${state ? "Yes" : "No"}
               </button>
@@ -163,7 +164,7 @@ export function renderInteraction(slide, response) {
           ${terms
             .map(
               (pair) => `
-                <button type="button" class="match-button ${value.activeTerm === pair.term ? "is-active" : ""}" data-match-term="${escapeHtml(pair.term)}" aria-pressed="${value.activeTerm === pair.term ? "true" : "false"}">
+                <button type="button" class="match-button ${value.activeTerm === pair.term ? "is-active" : ""}" data-match-term="${escapeHtml(pair.term)}" aria-pressed="${value.activeTerm === pair.term ? "true" : "false"}" aria-label="Select term ${escapeHtml(pair.term)}">
                   ${escapeHtml(pair.term)}
                 </button>
               `
@@ -175,7 +176,7 @@ export function renderInteraction(slide, response) {
           ${terms
             .map(
               (pair) => `
-                <button type="button" class="match-button" data-match-definition="${escapeHtml(pair.definition)}">
+                <button type="button" class="match-button" data-match-definition="${escapeHtml(pair.definition)}" aria-label="Match selected term to definition ${escapeHtml(pair.definition)}">
                   ${escapeHtml(pair.definition)}
                 </button>
               `
@@ -237,6 +238,7 @@ export function bindInteraction(slide, response, onChange) {
         const nextLabel = `${key}: ${state[key] ? "Yes" : "No"}`;
         event.currentTarget.textContent = nextLabel;
         event.currentTarget.setAttribute("aria-pressed", state[key] ? "true" : "false");
+        event.currentTarget.setAttribute("aria-label", `${key} set to ${state[key] ? "Yes" : "No"}`);
         event.currentTarget.classList.toggle("is-active", state[key]);
         setStatus(slide, payload);
       });

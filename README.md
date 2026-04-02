@@ -39,3 +39,23 @@ Do not hardcode API keys in source files or commit them to version control.
 - `app.js` — slide rendering, navigation, Section 1 warm-up chat flow, and Section 5 phased controller integration.
 - `src/ai/gemini.js` — validated Gemini wrapper with safe user-facing error handling.
 - `src/controllers/*` — structured conversation flow controllers.
+
+## Manual accessibility verification
+
+### Mobile touch targets
+
+1. Open the app in a mobile viewport (e.g., 390x844 in browser devtools).
+2. Confirm all interactive controls (navigation, send/speech, feedback, export, interaction buttons) are comfortably tappable.
+3. Verify no control is smaller than 48x48 CSS px and no adjacent controls are too tightly packed.
+4. Test with real touch input when possible (device or emulator) and confirm no accidental taps on neighboring controls.
+
+### Screen-reader behavior
+
+1. Test with a screen reader:
+   - macOS/iOS: VoiceOver
+   - Windows: NVDA (or JAWS)
+   - Android: TalkBack
+2. Verify landmarks and region names are announced (main app, slide region, slide navigation).
+3. Step through controls using keyboard/swipe navigation and confirm each control has a clear accessible name and role.
+4. Trigger validation and feedback flows; confirm status/error updates are announced via live regions.
+5. Change slides and confirm focus moves to the current slide region before continuing navigation.
