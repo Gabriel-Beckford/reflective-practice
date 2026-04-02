@@ -1,4 +1,22 @@
+import { callGemini } from "./src/ai/gemini.js";
+import { createSection1WarmupController } from "./src/controllers/section1WarmupController.js";
+import { createSection5Controller } from "./src/controllers/section5Controller.js";
+
 const slides = [
+  {
+    id: "s1-warmup",
+    section: 1,
+    title: "Section 1 · Warm-up Chat",
+    type: "question",
+    interactionType: "chat",
+    controller: "section1",
+    revealSteps: ["Share short reflections. The coach asks one warm-up question at a time."],
+    required: {
+      type: "chatComplete",
+      message: "Complete the warm-up chat before continuing."
+    },
+    next: "s2-arrival"
+  },
   {
     id: "s2-arrival",
     section: 2,
@@ -17,9 +35,7 @@ const slides = [
     title: "Section 2 · Check-in",
     type: "question",
     interactionType: "textarea",
-    revealSteps: [
-      "What moments today stood out, and why?"
-    ],
+    revealSteps: ["What moments today stood out, and why?"],
     required: {
       type: "minLength",
       value: 20,
@@ -109,22 +125,22 @@ const slides = [
     title: "Section 5 · Orientation",
     type: "content",
     revealSteps: [
-      "Section 5 examines obstacles.",
-      "Name friction points without judgment."
+      "Section 5 now uses guided phases.",
+      "Respond after each phase question to unlock the next one."
     ],
-    next: "s5-question"
+    next: "s5-phases"
   },
   {
-    id: "s5-question",
+    id: "s5-phases",
     section: 5,
-    title: "Section 5 · Reflection Prompt",
+    title: "Section 5 · Guided Phases",
     type: "question",
-    interactionType: "textarea",
-    revealSteps: ["What obstacle deserves your attention next?"],
+    interactionType: "chat",
+    controller: "section5",
+    revealSteps: ["Phase order is strict: Observe → Analyze → Reframe → Commit."],
     required: {
-      type: "minLength",
-      value: 12,
-      message: "Describe the obstacle before advancing."
+      type: "chatComplete",
+      message: "Complete all Section 5 phases before advancing."
     },
     next: "s6-orientation"
   },
@@ -185,8 +201,28 @@ const slideById = new Map(slides.map((slide) => [slide.id, slide]));
 const appState = {
   currentSlideId: slides[0].id,
   currentRevealStep: 1,
-  responses: {},
-  conversationHistory: []
+  responses: {
+    s1-warmup: { transcript: [] },
+    s5-phases: { transcript: [], phases: {} }
+  },
+  conversationHistory: [],
+  chatDrafts: {},
+  chatPending: {}
+};
+
+const chatControllers = {
+  section1: createSection1WarmupController({
+    callModel: callGemini,
+    onPersist: (payload) => {
+      appState.responses["s1-warmup"] = payload;
+    }
+  }),
+  section5: createSection5Controller({
+    callModel: callGemini,
+    onPersist: (payload) => {
+      appState.responses["s5-phases"] = payload;
+    }
+  })
 };
 
 const elements = {
@@ -214,16 +250,21 @@ function getSlideIndex(slideId) {
 
 function getPreviousSlideId(slideId) {
   const currentIndex = getSlideIndex(slideId);
-  if (currentIndex <= 0) {
-    return null;
-  }
-
-  return slides[currentIndex - 1].id;
+  return currentIndex <= 0 ? null : slides[currentIndex - 1].id;
 }
 
 function validateQuestionSlide(slide) {
   if (slide.type !== "question") {
     return { valid: true, message: "" };
+  }
+
+  if (slide.required?.type === "chatComplete") {
+    const controller = chatControllers[slide.controller];
+    const isValid = Boolean(controller?.isComplete());
+    return {
+      valid: isValid,
+      message: isValid ? "" : slide.required.message
+    };
   }
 
   const response = (appState.responses[slide.id] || "").trim();
@@ -240,26 +281,14 @@ function validateQuestionSlide(slide) {
 }
 
 function getCompletedSlideCount() {
-  return slides.filter((slide) => {
-    if (slide.type === "content") {
-      return true;
-    }
-
-    return validateQuestionSlide(slide).valid;
-  }).length;
+  return slides.filter((slide) => (slide.type === "content" ? true : validateQuestionSlide(slide).valid)).length;
 }
 
 function updateProgressIndicator(currentSlide) {
   const completedSlides = getCompletedSlideCount();
   const totalSlides = slides.length;
   const sectionSlides = slides.filter((slide) => slide.section === currentSlide.section);
-  const sectionCompleted = sectionSlides.filter((slide) => {
-    if (slide.type === "content") {
-      return true;
-    }
-
-    return validateQuestionSlide(slide).valid;
-  }).length;
+  const sectionCompleted = sectionSlides.filter((slide) => (slide.type === "content" ? true : validateQuestionSlide(slide).valid)).length;
 
   const progressMarkup = `
     <div class="progress-card" aria-live="polite">
@@ -275,13 +304,46 @@ function updateProgressIndicator(currentSlide) {
 }
 
 function renderRevealSteps(slide) {
-  const visibleSteps = slide.revealSteps.slice(0, appState.currentRevealStep);
-  return visibleSteps.map((step, index) => `<p data-step="${index + 1}">${step}</p>`).join("");
+  return slide.revealSteps.slice(0, appState.currentRevealStep).map((step, index) => `<p data-step="${index + 1}">${step}</p>`).join("");
+}
+
+function renderTranscript(entries) {
+  return entries
+    .map((entry) => `<p><strong>${entry.role === "assistant" ? "Coach" : "You"}:</strong> ${entry.content}</p>`)
+    .join("");
+}
+
+function renderChatInput(slide) {
+  const responseEntry = appState.responses[slide.id] || { transcript: [] };
+  const draft = appState.chatDrafts[slide.id] || "";
+  const pending = Boolean(appState.chatPending[slide.id]);
+  const validation = validateQuestionSlide(slide);
+
+  return `
+    <div class="chat-transcript" aria-live="polite">
+      ${renderTranscript(responseEntry.transcript || []) || "<p>Coach is preparing the first prompt…</p>"}
+    </div>
+    <label for="response-input-${slide.id}">Your response</label>
+    <textarea
+      id="response-input-${slide.id}"
+      class="touch-target response-input"
+      rows="3"
+      aria-label="Response for ${slide.title}"
+      placeholder="Type your response"
+      ${pending ? "disabled" : ""}
+    >${draft}</textarea>
+    <button id="send-button-${slide.id}" type="button" class="touch-target" ${pending ? "disabled" : ""}>${pending ? "Sending..." : "Send"}</button>
+    <p id="validation-message-${slide.id}" class="validation-message" role="status" aria-live="polite">${validation.message}</p>
+  `;
 }
 
 function renderQuestionInput(slide) {
   if (slide.type !== "question") {
     return "";
+  }
+
+  if (slide.interactionType === "chat") {
+    return renderChatInput(slide);
   }
 
   const validation = validateQuestionSlide(slide);
@@ -301,8 +363,7 @@ function renderQuestionInput(slide) {
 function updateNavigationState(slide) {
   elements.prevButton.disabled = getSlideIndex(slide.id) === 0;
 
-  const hasMoreRevealSteps = appState.currentRevealStep < slide.revealSteps.length;
-  if (hasMoreRevealSteps) {
+  if (appState.currentRevealStep < slide.revealSteps.length) {
     elements.nextButton.textContent = "Continue";
     return;
   }
@@ -310,8 +371,58 @@ function updateNavigationState(slide) {
   elements.nextButton.textContent = slide.next ? "Next" : "Finish";
 }
 
+async function sendChatResponse(slide) {
+  const input = document.getElementById(`response-input-${slide.id}`);
+  const validationNode = document.getElementById(`validation-message-${slide.id}`);
+  const controller = chatControllers[slide.controller];
+  if (!input || !controller) {
+    return;
+  }
+
+  appState.chatPending[slide.id] = true;
+  appState.chatDrafts[slide.id] = input.value;
+  renderSlide(slide.id);
+
+  const result = await controller.handleLearnerResponse(appState.chatDrafts[slide.id]);
+  appState.chatPending[slide.id] = false;
+  appState.chatDrafts[slide.id] = "";
+
+  if (!result.ok && validationNode) {
+    validationNode.textContent = result.message;
+  }
+
+  renderSlide(slide.id);
+}
+
 function bindQuestionInput(slide) {
   if (slide.type !== "question") {
+    return;
+  }
+
+  if (slide.interactionType === "chat") {
+    const textarea = document.getElementById(`response-input-${slide.id}`);
+    const sendButton = document.getElementById(`send-button-${slide.id}`);
+    if (textarea) {
+      textarea.addEventListener("input", (event) => {
+        appState.chatDrafts[slide.id] = event.target.value;
+      });
+    }
+
+    if (sendButton) {
+      sendButton.addEventListener("click", () => {
+        sendChatResponse(slide);
+      });
+    }
+
+    const controller = chatControllers[slide.controller];
+    if ((appState.responses[slide.id]?.transcript || []).length === 0 && controller) {
+      appState.chatPending[slide.id] = true;
+      controller.ensureStarted().finally(() => {
+        appState.chatPending[slide.id] = false;
+        renderSlide(slide.id);
+      });
+    }
+
     return;
   }
 
@@ -333,10 +444,7 @@ function renderSlide(slideId) {
 
   appState.currentSlideId = slideId;
   elements.slideTitle.textContent = slide.title;
-  elements.slideContent.innerHTML = `
-    ${renderRevealSteps(slide)}
-    ${renderQuestionInput(slide)}
-  `;
+  elements.slideContent.innerHTML = `${renderRevealSteps(slide)}${renderQuestionInput(slide)}`;
 
   updateProgressIndicator(slide);
   updateNavigationState(slide);
@@ -383,7 +491,6 @@ function goToNextSlide() {
     if (validationNode) {
       validationNode.textContent = validation.message;
     }
-
     return;
   }
 
@@ -394,7 +501,7 @@ function goToNextSlide() {
   }
 
   elements.slideTitle.textContent = "Reflection complete";
-  elements.slideContent.innerHTML = "<p>Thanks for reflecting. Your responses are stored in app state for now.</p>";
+  elements.slideContent.innerHTML = "<p>Thanks for reflecting. Section transcripts are stored in <code>responses</code> for final summary/PDF export flows.</p>";
   elements.prevButton.disabled = false;
   elements.nextButton.disabled = true;
   recordConversationEntry(slide, "completed");
