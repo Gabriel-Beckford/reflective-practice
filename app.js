@@ -220,10 +220,7 @@ const FEEDBACK_STORAGE_KEY = "reflective-practice-feedback";
 const appState = {
   currentSlideId: slides[0].id,
   currentRevealStep: 1,
-  responses: {
-    "s1-warmup": { transcript: [] },
-    "s5-phases": { transcript: [], phases: {} }
-  },
+  responses: {},
   conversationHistory: [],
   chatDrafts: {},
   chatPending: {},
@@ -233,6 +230,9 @@ const appState = {
     status: ""
   }
 };
+
+appState.responses["s1-warmup"] = { transcript: [] };
+appState.responses["s5-phases"] = { transcript: [], phases: {} };
 
 const chatControllers = {
   section1: createSection1WarmupController({
