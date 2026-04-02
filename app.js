@@ -10,8 +10,8 @@ const state = {
   reveals: { '1.1': 0, '2.1': 0 },
   slide12Submitted: false,
   slide12Pending: false,
-  slide12Feedback:
-    "Thank you for sharing. I hear the tensions and priorities in your classroom context. To deepen your reflection:\n\nFollow-up: Which one challenge most affects your students' learning right now, and why?",
+  slide12Error: false,
+  slide12Feedback: '',
 };
 
 const slides = [
@@ -73,9 +73,9 @@ const slides = [
         </section>
         <div class="input-wrap">
           <textarea id="warmup-input" placeholder="1. I notice...\n2. My challenges are...\n3. My goal is...">${escapeHtml(userWarmUpResponse)}</textarea>
-          <button class="nav-btn submit-btn" id="submit-warmup">Submit</button>
+          <button class="nav-btn submit-btn" id="submit-warmup" ${state.slide12Pending ? 'disabled' : ''}>${state.slide12Pending ? 'Thinking...' : 'Submit'}</button>
         </div>
-        <div class="feedback-card ${state.slide12Submitted ? 'visible' : 'hidden'}" id="warmup-feedback">
+        <div class="feedback-card ${state.slide12Submitted ? 'visible' : 'hidden'} ${state.slide12Error ? 'error' : ''}" id="warmup-feedback" role="status" aria-live="polite">
           ${formatWarmupFeedback(state.slide12Feedback, state.slide12Pending)}
         </div>
         <div class="input-wrap ${state.slide12Submitted ? '' : 'hidden'}" id="followup-wrap">
@@ -194,20 +194,23 @@ function wireSlideSpecificHandlers(slideId) {
 
     state.slide12Submitted = true;
     state.slide12Pending = true;
-    state.slide12Feedback =
-      "Thank you for sharing. I hear the tensions and priorities in your classroom context. Let me generate a tailored follow-up question...";
+    state.slide12Error = false;
+    state.slide12Feedback = 'Generating AI follow-up...';
     render();
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Thinking...';
-
-    const aiFollowUp = await requestGeminiFollowUp(userWarmUpResponse);
-    state.slide12Pending = false;
-    state.slide12Feedback = `Thank you for sharing. I hear the tensions and priorities in your classroom context.\n\nFollow-up: ${aiFollowUp}`;
-    render();
-
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Submit';
+    try {
+      const aiFollowUp = await requestGeminiFollowUp(userWarmUpResponse);
+      state.slide12Pending = false;
+      state.slide12Error = false;
+      state.slide12Feedback = aiFollowUp;
+      render();
+    } catch (error) {
+      console.error('Gemini API error:', error);
+      state.slide12Pending = false;
+      state.slide12Error = true;
+      state.slide12Feedback =
+        'Error: We could not get an AI follow-up right now. Please check your connection and try again.';
+      render();
+    }
   });
 }
 
@@ -228,11 +231,12 @@ Teacher response:
 ${userText}
 `.trim();
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 12000);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-    const response = await fetch(GEMINI_API_URL, {
+  let response;
+  try {
+    response = await fetch(GEMINI_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
@@ -244,29 +248,27 @@ ${userText}
         },
       }),
     });
+  } finally {
     clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`Gemini request failed with status ${response.status}`);
-    }
-
-    const data = await response.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-    if (!text) {
-      throw new Error('Gemini response did not contain text.');
-    }
-
-    return normalizeFollowUpQuestion(text);
-  } catch (error) {
-    console.error('Gemini API error:', error);
-    return "Which one challenge currently has the biggest impact on student learning, and what makes it so significant right now?";
   }
+
+  if (!response.ok) {
+    throw new Error(`Gemini request failed with status ${response.status}`);
+  }
+
+  const data = await response.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+  if (!text) {
+    throw new Error('Gemini response did not contain text.');
+  }
+
+  return normalizeFollowUpQuestion(text);
 }
 
 function normalizeFollowUpQuestion(text) {
   const compact = text.replace(/\s+/g, ' ').trim();
   if (!compact) {
-    return "Which one challenge currently has the biggest impact on student learning, and what makes it so significant right now?";
+    throw new Error('AI follow-up text was empty.');
   }
 
   const firstSentence = compact.split(/(?<=[.?!])\s+/)[0];
