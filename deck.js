@@ -1,6 +1,8 @@
 (() => {
   const { slides } = window.DECK_DATA;
   const STORAGE_KEY = "reflective-practice.deck-state.v1";
+  let memoryState = null;
+  let storageEnabled = true;
 
   function normalizeSavedState(saved) {
     if (!saved || typeof saved !== "object") return { index: 0, responses: {}, completed: false };
@@ -34,28 +36,35 @@
   }
 
   function loadPersistedState() {
+    if (!storageEnabled || !window.localStorage) {
+      return memoryState || { index: 0, responses: {}, completed: false };
+    }
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (!raw) return { index: 0, responses: {}, completed: false };
       return normalizeSavedState(JSON.parse(raw));
     } catch (error) {
       console.warn("Unable to hydrate saved deck responses.", error);
+      storageEnabled = false;
       return { index: 0, responses: {}, completed: false };
     }
   }
 
   function persistState(state) {
+    memoryState = {
+      index: state.index,
+      responses: state.responses,
+      completed: state.completed
+    };
+    if (!storageEnabled || !window.localStorage) return;
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({
-          index: state.index,
-          responses: state.responses,
-          completed: state.completed
-        })
+        JSON.stringify(memoryState)
       );
     } catch (error) {
       console.warn("Unable to persist deck responses.", error);
+      storageEnabled = false;
     }
   }
 
@@ -100,17 +109,30 @@
   }
 
   function createChoiceList(slide, multi = false) {
-    const wrap = document.createElement("div");
+    const wrap = document.createElement("fieldset");
     wrap.className = "choice-list";
+    const legend = document.createElement("legend");
+    legend.className = "sr-only";
+    legend.textContent = slide.question || slide.prompt || slide.title || "Select an option";
+    wrap.appendChild(legend);
 
     const selected = new Set(getResponse(slide.id, slide.responseKey, []));
     const isSubmitted = Boolean(getResponse(slide.id, getSubmitKey(slide), false));
+    const inputType = multi ? "checkbox" : "radio";
+    const inputName = `choice-${slide.id}`;
 
     slide.options.forEach((option, index) => {
-      const item = document.createElement("button");
-      item.type = "button";
+      const item = document.createElement("label");
       item.className = "choice-item";
+      item.setAttribute("for", `${inputName}-${index}`);
       if (selected.has(index)) item.classList.add("selected");
+
+      const input = document.createElement("input");
+      input.type = inputType;
+      input.id = `${inputName}-${index}`;
+      input.name = inputName;
+      input.className = "choice-input";
+      input.checked = selected.has(index);
 
       const marker = document.createElement("span");
       marker.className = "choice-marker";
@@ -118,8 +140,8 @@
       text.className = "choice-text";
       text.textContent = option;
 
-      item.append(marker, text);
-      item.addEventListener("click", () => {
+      item.append(input, marker, text);
+      input.addEventListener("change", () => {
         if (multi) {
           if (selected.has(index)) selected.delete(index);
           else selected.add(index);
@@ -129,7 +151,11 @@
         }
 
         [...wrap.children].forEach((child, i) => {
-          child.classList.toggle("selected", selected.has(i));
+          if (i === 0) return;
+          child.classList.toggle("selected", selected.has(i - 1));
+        });
+        [...wrap.querySelectorAll(".choice-input")].forEach((control, i) => {
+          control.checked = selected.has(i);
         });
 
         const nextSelection = [...selected].sort((a, b) => a - b);
@@ -154,11 +180,13 @@
 
   function paintChoiceStates(wrap, slide, selection, submitted) {
     [...wrap.children].forEach((child, i) => {
+      if (i === 0) return;
+      const choiceIndex = i - 1;
       child.classList.remove("correct", "incorrect", "selected");
-      child.classList.toggle("selected", selection.includes(i));
+      child.classList.toggle("selected", selection.includes(choiceIndex));
       if (!submitted || !slide.correctAnswers) return;
-      if (slide.correctAnswers.includes(i)) child.classList.add("correct");
-      if (selection.includes(i) && !slide.correctAnswers.includes(i)) child.classList.add("incorrect");
+      if (slide.correctAnswers.includes(choiceIndex)) child.classList.add("correct");
+      if (selection.includes(choiceIndex) && !slide.correctAnswers.includes(choiceIndex)) child.classList.add("incorrect");
     });
   }
 
@@ -202,8 +230,12 @@
   }
 
   function createYesNoMatrix(slide) {
-    const wrap = document.createElement("div");
+    const wrap = document.createElement("fieldset");
     wrap.className = "choice-list";
+    const legend = document.createElement("legend");
+    legend.className = "sr-only";
+    legend.textContent = slide.question || "Answer yes or no for each statement";
+    wrap.appendChild(legend);
     const saved = { ...getResponse(slide.id, slide.responseKey, {}) };
     const expectedAnswers = Array.isArray(slide.expectedAnswers) ? slide.expectedAnswers : [];
 
@@ -234,10 +266,17 @@
       row.className = "choice-list";
 
       ["Yes", "No"].forEach((choice) => {
-        const btn = document.createElement("button");
-        btn.type = "button";
+        const btn = document.createElement("label");
         btn.className = "choice-item";
         btn.dataset.choice = choice;
+        btn.setAttribute("for", `${slide.id}-${index}-${choice}`);
+
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = `${slide.id}-${index}`;
+        input.id = `${slide.id}-${index}-${choice}`;
+        input.className = "choice-input";
+        input.checked = saved[index] === choice;
 
         const marker = document.createElement("span");
         marker.className = "choice-marker";
@@ -245,8 +284,8 @@
         text.className = "choice-text";
         text.textContent = choice;
 
-        btn.append(marker, text);
-        btn.addEventListener("click", () => {
+        btn.append(input, marker, text);
+        input.addEventListener("change", () => {
           saved[index] = choice;
           saveResponse(slide.id, slide.responseKey, saved);
           paintRowState(row, index);
@@ -440,10 +479,13 @@
 
     const inputWrap = document.createElement("div");
     inputWrap.className = "input-wrap";
-    const prompt = document.createElement("p");
-    prompt.className = "slide-copy";
-    prompt.textContent = slide.prompt || "";
     const area = document.createElement("textarea");
+    const areaId = `response-${slide.id}`;
+    area.id = areaId;
+    const prompt = document.createElement("label");
+    prompt.className = "slide-copy";
+    prompt.setAttribute("for", areaId);
+    prompt.textContent = slide.prompt || "Your response";
     area.value = getResponse(slide.id, slide.responseKey, "");
     const saveTextareaResponse = () => saveResponse(slide.id, slide.responseKey, area.value);
     area.addEventListener("input", saveTextareaResponse);
@@ -594,6 +636,9 @@
     const feedback = document.createElement("div");
     feedback.id = "feedback-card";
     feedback.className = "feedback-card";
+    feedback.setAttribute("role", "status");
+    feedback.setAttribute("aria-live", "polite");
+    feedback.setAttribute("aria-atomic", "true");
     feedback.innerHTML = '<div class="feedback-title">Feedback</div><div class="feedback-body"></div>';
 
     card.append(badge, title);
