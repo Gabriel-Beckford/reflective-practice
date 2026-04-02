@@ -1452,6 +1452,16 @@ Mobile-first breakpoints:
 
 ---
 
+
+
+### Reveal.js reference deck deployment
+
+A deployable Reveal.js slide deck of the documentation references is provided at `index.html` in the repository root.
+
+- Open locally: `index.html`
+- Deploy as static site: serve repository root (the deck loads Reveal.js from CDN and uses the local `styles.css` tokens/theme).
+- Navigation: swipe/tap arrows/keyboard, with progressive fragment reveals per slide.
+
 ## References (for use in the Teaching Guide commentary)
 
 - Cummins, J. (1979). Cognitive/academic language proficiency, linguistic interdependence, the optimum age question and some other matters. *Working Papers on Bilingualism*, *19*, 121–129.
