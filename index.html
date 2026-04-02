@@ -29,6 +29,16 @@
     .slide-count { justify-self: center; color: var(--md-on-surface-variant); font-weight: 500; }
     .submit-btn { background: var(--md-secondary); color: var(--md-on-secondary); }
     .accent { color: var(--md-primary); font-weight: 700; }
+    .grounding-intro { max-width: 54ch; }
+    .activity-321 { display: grid; gap: 12px; }
+    .activity-item { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; padding: 14px 16px; border: 1px solid var(--md-outline-variant); border-radius: var(--radius-md); background: var(--md-surface-container); }
+    .activity-item h3 { font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.08rem, 0.98rem + .35vw, 1.3rem); line-height: 1.25; }
+    .activity-item p { color: var(--md-on-surface-variant); line-height: 1.5; }
+    .activity-item .material-symbols-rounded { background: var(--md-primary-container); color: var(--md-on-primary-container); border-radius: 999px; width: 36px; height: 36px; display: grid; place-items: center; }
+    .activity-item[data-tone="secondary"] { background: var(--md-secondary-container); border-color: color-mix(in srgb, var(--md-secondary) 32%, var(--md-secondary-container)); }
+    .activity-item[data-tone="secondary"] .material-symbols-rounded { background: color-mix(in srgb, var(--md-secondary) 20%, #fff); color: var(--md-on-secondary-container); }
+    .activity-item[data-tone="tertiary"] { background: var(--md-tertiary-container); border-color: color-mix(in srgb, var(--md-tertiary) 26%, var(--md-tertiary-container)); }
+    .activity-item[data-tone="tertiary"] .material-symbols-rounded { background: color-mix(in srgb, var(--md-tertiary) 16%, #fff); color: var(--md-on-tertiary-container); }
   </style>
 </head>
 <body>
@@ -91,11 +101,31 @@
           <article class="slide active" data-slide="1.2">
             <span class="slide-badge">REFLECT</span>
             <span class="material-symbols-rounded icon-chip" aria-hidden="true">lightbulb</span>
-            <p class="slide-question">Let's begin with a 3-2-1 grounding activity to anchor our session. Please write down:<br><br>
-              3 things you notice about your current teaching practice.<br>
-              2 challenges you are currently facing in your Haitian classroom.<br>
-              1 goal you have for this session.
-            </p>
+            <h2 class="slide-question">Let's begin with a 3-2-1 grounding activity.</h2>
+            <p class="slide-copy grounding-intro">Please capture a quick snapshot of your current teaching context before we move into theory.</p>
+            <section class="activity-321" aria-label="3-2-1 grounding prompts">
+              <article class="activity-item" data-tone="primary">
+                <span class="material-symbols-rounded" aria-hidden="true">visibility</span>
+                <div>
+                  <h3>3 observations</h3>
+                  <p>Three things you notice about your current teaching practice.</p>
+                </div>
+              </article>
+              <article class="activity-item" data-tone="secondary">
+                <span class="material-symbols-rounded" aria-hidden="true">warning</span>
+                <div>
+                  <h3>2 challenges</h3>
+                  <p>Two challenges you are currently facing in your Haitian classroom.</p>
+                </div>
+              </article>
+              <article class="activity-item" data-tone="tertiary">
+                <span class="material-symbols-rounded" aria-hidden="true">flag</span>
+                <div>
+                  <h3>1 session goal</h3>
+                  <p>One goal you want to prioritize during this session.</p>
+                </div>
+              </article>
+            </section>
             <div class="input-wrap">
               <textarea id="warmup-input" placeholder="1. I notice...\n2. My challenges are...\n3. My goal is...">${escapeHtml(userWarmUpResponse)}</textarea>
               <button class="nav-btn submit-btn" id="submit-warmup">Submit</button>

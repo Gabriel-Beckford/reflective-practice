@@ -65,7 +65,7 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-x: hidden;
   position: relative;
   background: var(--md-surface-low);
 }
@@ -111,15 +111,16 @@ header {
 }
 
 .header-label {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 0.875rem;
+  font-weight: 700;
   color: var(--md-on-surface-variant);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .header-section {
-  font-size: 13px;
-  font-weight: 400;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--md-outline);
 }
 
@@ -275,8 +276,8 @@ main {
 }
 
 .slide-copy {
-  font-size: clamp(1.05rem, 0.98rem + 0.28vw, 1.2rem);
-  line-height: 1.65;
+  font-size: clamp(1rem, 0.94rem + 0.28vw, 1.125rem);
+  line-height: 1.72;
   max-width: 64ch;
 }
 
@@ -302,6 +303,7 @@ main {
   max-width: none;
   padding: 14px 18px;
   border-radius: 20px;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--md-outline-variant) 38%, transparent);
 }
 
 .goal-tier.top { width: min(82%, 680px); justify-self: center; }
@@ -518,6 +520,7 @@ footer {
   background: var(--md-primary);
   color: var(--md-on-primary);
   border-color: var(--md-primary);
+  font-weight: 700;
 }
 
 @media (hover: hover) {
@@ -539,6 +542,7 @@ footer {
 
 .slide-count {
   font-size: 1rem;
+  letter-spacing: 0.02em;
 }
 
 
@@ -610,7 +614,7 @@ footer {
    ========================================================================== */
 @media (min-width: 600px) {
   main {
-    align-items: center;
+    align-items: flex-start;
     padding: 36px 28px 44px;
   }
 
