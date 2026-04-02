@@ -7,16 +7,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@0..1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
   <style>
     .hidden { display: none !important; }
-    .slide-copy { color: var(--md-on-surface-variant); line-height: 1.55; }
-    .icon-chip { font-size: 28px; }
-    .goals-pyramid { display: grid; gap: 10px; justify-items: center; }
-    .goal-tier { width: 100%; max-width: 420px; border-radius: var(--radius-md); padding: 12px 14px; background: var(--md-surface-container); border: 1px solid var(--md-outline-variant); }
-    .goal-tier.top { max-width: 250px; }
-    .goal-tier.mid { max-width: 320px; }
-    .goal-tier.base { max-width: 420px; }
+    .slide-copy { color: var(--md-on-surface-variant); }
+    .goals-pyramid { display: grid; }
+    .goal-tier { width: 100%; background: var(--md-surface-container); border: 1px solid var(--md-outline-variant); }
     .goal-tier strong { color: var(--md-primary); }
     .reveal-step { opacity: 0; transform: translateY(8px); transition: opacity var(--dur-med) var(--ease), transform var(--dur-med) var(--ease); }
     .reveal-step.revealed { opacity: 1; transform: translateY(0); }
@@ -69,7 +66,7 @@
           <article class="slide active" data-slide="1.1">
             <span class="slide-badge">SECTION 1 · LEAD-IN</span>
             <section class="reveal-step ${state.reveals['1.1'] >= 1 ? 'revealed' : ''}">
-              <div class="icon-chip" aria-hidden="true">👋</div>
+              <span class="material-symbols-rounded icon-chip" aria-hidden="true">waving_hand</span>
               <h2 class="slide-question">Welcome to your asynchronous session on Kolb's Reflective Cycle.</h2>
             </section>
             <p class="slide-copy reveal-step ${state.reveals['1.1'] >= 2 ? 'revealed' : ''}">
@@ -93,7 +90,7 @@
         render: () => `
           <article class="slide active" data-slide="1.2">
             <span class="slide-badge">REFLECT</span>
-            <div class="icon-chip" aria-hidden="true">💡</div>
+            <span class="material-symbols-rounded icon-chip" aria-hidden="true">lightbulb</span>
             <p class="slide-question">Let's begin with a 3-2-1 grounding activity to anchor our session. Please write down:<br><br>
               3 things you notice about your current teaching practice.<br>
               2 challenges you are currently facing in your Haitian classroom.<br>
@@ -123,7 +120,7 @@
         render: () => `
           <article class="slide active" data-slide="2.1">
             <span class="slide-badge">SECTION 2 · THEORY</span>
-            <div class="icon-chip" aria-hidden="true">📘</div>
+            <span class="material-symbols-rounded icon-chip" aria-hidden="true">menu_book</span>
             <p class="slide-copy reveal-step ${state.reveals['2.1'] >= 1 ? 'revealed' : ''}">
               David Kolb argued that <span class="accent">knowledge is created through the transformation of experience</span>. Experiential learning is best conceived as a process, not in terms of fixed outcomes.
             </p>
@@ -142,9 +139,9 @@
     function footer(showBack, canNext, counter) {
       return `
         <footer class="slide-footer">
-          ${showBack ? '<button class="nav-btn secondary" id="back-btn">← Back</button>' : '<span></span>'}
+          ${showBack ? '<button class="nav-btn secondary" id="back-btn"><span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>Back</button>' : '<span></span>'}
           <span class="slide-count">${counter}</span>
-          <button class="nav-btn primary" id="next-btn" ${canNext ? '' : 'disabled'}>Next →</button>
+          <button class="nav-btn primary" id="next-btn" ${canNext ? '' : 'disabled'}>Next<span class="material-symbols-rounded" aria-hidden="true">arrow_forward</span></button>
         </footer>
       `;
     }
