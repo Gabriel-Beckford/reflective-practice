@@ -632,3 +632,102 @@ footer {
     padding: 18px 20px;
   }
 }
+
+/* ==========================================================================
+   APP-SPECIFIC HELPERS
+   ========================================================================== */
+.hidden {
+  display: none !important;
+}
+
+.input-wrap {
+  display: grid;
+  gap: 12px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--md-outline);
+  font: inherit;
+  resize: vertical;
+  background: var(--md-surface);
+}
+
+textarea:focus {
+  outline: 2px solid var(--md-primary);
+  border-color: var(--md-primary);
+}
+
+.submit-btn {
+  background: var(--md-secondary);
+  color: var(--md-on-secondary);
+}
+
+.accent {
+  color: var(--md-primary);
+  font-weight: 700;
+}
+
+.grounding-intro {
+  max-width: 54ch;
+}
+
+.activity-321 {
+  display: grid;
+  gap: 12px;
+}
+
+.activity-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px 16px;
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--radius-md);
+  background: var(--md-surface-container);
+}
+
+.activity-item h3 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: clamp(1.08rem, 0.98rem + 0.35vw, 1.3rem);
+  line-height: 1.25;
+}
+
+.activity-item p {
+  color: var(--md-on-surface-variant);
+  line-height: 1.5;
+}
+
+.activity-item .material-symbols-rounded {
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+}
+
+.activity-item[data-tone="secondary"] {
+  background: var(--md-secondary-container);
+  border-color: color-mix(in srgb, var(--md-secondary) 32%, var(--md-secondary-container));
+}
+
+.activity-item[data-tone="secondary"] .material-symbols-rounded {
+  background: color-mix(in srgb, var(--md-secondary) 20%, #fff);
+  color: var(--md-on-secondary-container);
+}
+
+.activity-item[data-tone="tertiary"] {
+  background: var(--md-tertiary-container);
+  border-color: color-mix(in srgb, var(--md-tertiary) 26%, var(--md-tertiary-container));
+}
+
+.activity-item[data-tone="tertiary"] .material-symbols-rounded {
+  background: color-mix(in srgb, var(--md-tertiary) 16%, #fff);
+  color: var(--md-on-tertiary-container);
+}
