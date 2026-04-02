@@ -629,6 +629,11 @@ footer {
   font-weight: 700;
 }
 
+.nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 @media (hover: hover) {
   .nav-btn.primary:hover {
     opacity: 0.9;
@@ -649,6 +654,15 @@ footer {
 .slide-count {
   font-size: 1rem;
   letter-spacing: 0.02em;
+}
+
+.completion-message {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  font-weight: 500;
 }
 
 
