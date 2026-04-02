@@ -1,0 +1,581 @@
+/* ==========================================================================
+   MATERIAL DESIGN 3 — REFINED COLOR TOKENS (Purple, Green, Gold)
+   Mobile-first · GPU-safe · No asymmetric borders
+   ========================================================================== */
+:root {
+  --md-primary: #6750A4;
+  --md-on-primary: #FFFFFF;
+  --md-primary-container: #EADDFF;
+  --md-on-primary-container: #21005D;
+  --md-primary-dim: #D0BCFF;
+
+  --md-secondary: #4A635D;
+  --md-on-secondary: #FFFFFF;
+  --md-secondary-container: #CCE8E0;
+  --md-on-secondary-container: #05201A;
+
+  --md-tertiary: #B28600;
+  --md-on-tertiary: #FFFFFF;
+  --md-tertiary-container: #FFDEA4;
+  --md-on-tertiary-container: #271900;
+
+  --md-surface: #FFFBFE;
+  --md-on-surface: #1C1B1F;
+  --md-on-surface-variant: #49454F;
+  --md-surface-low: #F7F2F9;
+  --md-surface-container: #F3EDF7;
+  --md-surface-high: #ECE6F0;
+  --md-outline: #79747E;
+  --md-outline-variant: #CAC4D0;
+
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 28px;
+
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur-short: 200ms;
+  --dur-med: 350ms;
+  --dur-long: 500ms;
+}
+
+
+/* ==========================================================================
+   RESET & BASE
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+  background: var(--md-surface-low);
+}
+
+body {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  color: var(--md-on-surface);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: var(--md-surface-low);
+}
+
+
+/* ==========================================================================
+   BACKGROUND — Static radial gradients (no animation, no GPU churn)
+   ========================================================================== */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 10% 90%, rgba(234, 221, 255, 0.5) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 90% 10%, rgba(204, 232, 224, 0.4) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+
+/* ==========================================================================
+   HEADER
+   ========================================================================== */
+header {
+  position: relative;
+  z-index: 100;
+  flex-shrink: 0;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 20px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--md-on-surface-variant);
+  letter-spacing: 0.02em;
+}
+
+.header-section {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--md-outline);
+}
+
+
+/* ==========================================================================
+   PROGRESS BAR
+   ========================================================================== */
+.progress-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--md-outline-variant);
+}
+
+.progress-fill {
+  height: 100%;
+  width: 35%;
+  background: var(--md-primary);
+  border-radius: 0 3px 3px 0;
+  transition: width var(--dur-med) var(--ease);
+}
+
+
+/* ==========================================================================
+   MAIN CONTENT AREA
+   ========================================================================== */
+main {
+  flex: 1;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  z-index: 1;
+}
+
+#slide-container {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+
+/* ==========================================================================
+   SLIDE CARD — Uniform border, no asymmetric top-border
+   ========================================================================== */
+.slide {
+  width: 100%;
+  background: var(--md-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--md-outline-variant);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: slideUp var(--dur-long) var(--ease) forwards;
+}
+
+.slide.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes slideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ==========================================================================
+   SLIDE BADGE — Replaces the asymmetric gold border as identity signal
+   ========================================================================== */
+.slide-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--md-tertiary-container);
+  color: var(--md-on-tertiary-container);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  align-self: flex-start;
+}
+
+.slide-badge svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+
+/* ==========================================================================
+   SLIDE QUESTION TYPOGRAPHY
+   ========================================================================== */
+.slide-question {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--md-on-surface);
+}
+
+.slide-question strong {
+  color: var(--md-primary);
+  font-weight: 700;
+}
+
+
+/* ==========================================================================
+   INTERACTIVE CHOICE LIST
+   ========================================================================== */
+.choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.choice-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--md-surface);
+  border: 1.5px solid var(--md-outline-variant);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  position: relative;
+  transition:
+    background var(--dur-short) var(--ease),
+    border-color var(--dur-short) var(--ease),
+    transform 120ms ease;
+  min-height: 52px;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.choice-item:active {
+  transform: scale(0.985);
+}
+
+@media (hover: hover) {
+  .choice-item:hover {
+    border-color: var(--md-primary-dim);
+    background: var(--md-surface-container);
+  }
+}
+
+.choice-marker {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--md-outline-variant);
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--dur-short) var(--ease);
+}
+
+.choice-text {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--md-on-surface);
+}
+
+
+/* ==========================================================================
+   CHOICE STATES — Selected, Correct, Incorrect
+   ========================================================================== */
+
+/* ── Selected (before reveal) ──────────────────────────────────────────── */
+.choice-item.selected {
+  background: var(--md-primary-container);
+  border-color: var(--md-primary);
+}
+
+.choice-item.selected .choice-marker {
+  background: var(--md-primary);
+  border-color: var(--md-primary);
+}
+
+.choice-item.selected .choice-marker::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--md-on-primary);
+}
+
+.choice-item.selected .choice-text {
+  color: var(--md-on-primary-container);
+  font-weight: 500;
+}
+
+/* ── Correct ───────────────────────────────────────────────────────────── */
+.choice-item.correct {
+  background: var(--md-secondary-container);
+  border-color: var(--md-secondary);
+}
+
+.choice-item.correct .choice-marker {
+  background: var(--md-secondary);
+  border-color: var(--md-secondary);
+}
+
+.choice-item.correct .choice-marker::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8l3.5 3.5L13 5' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+  border-radius: 0;
+}
+
+.choice-item.correct .choice-text {
+  color: var(--md-on-secondary-container);
+  font-weight: 500;
+}
+
+/* ── Incorrect ─────────────────────────────────────────────────────────── */
+.choice-item.incorrect {
+  opacity: 0.45;
+  border-color: var(--md-outline-variant);
+}
+
+
+/* ==========================================================================
+   FEEDBACK CARD
+   ========================================================================== */
+.feedback-card {
+  background: var(--md-secondary-container);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  animation: feedbackIn var(--dur-med) var(--ease) both;
+}
+
+.feedback-card.visible {
+  display: flex;
+}
+
+@keyframes feedbackIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feedback-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--md-on-secondary-container);
+}
+
+.feedback-body {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--md-secondary);
+}
+
+
+/* ==========================================================================
+   CHAT BUBBLES (AI / User)
+   ========================================================================== */
+.chat-bubble {
+  padding: 16px 20px;
+  border-radius: var(--radius-lg);
+  max-width: 88%;
+  font-size: 1rem;
+  line-height: 1.5;
+  animation: popIn 400ms var(--ease) both;
+}
+
+.chat-ai {
+  background: var(--md-surface-container);
+  border: 1px solid var(--md-outline-variant);
+  border-bottom-left-radius: 4px;
+  align-self: flex-start;
+}
+
+.chat-user {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  border-bottom-right-radius: 4px;
+  align-self: flex-end;
+}
+
+
+/* ==========================================================================
+   FOOTER / NAVIGATION
+   ========================================================================== */
+footer {
+  position: relative;
+  z-index: 100;
+  flex-shrink: 0;
+  padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--md-outline-variant);
+  background: var(--md-surface);
+  color: var(--md-on-surface-variant);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--dur-short) var(--ease);
+  min-height: 44px;
+}
+
+.nav-btn:active {
+  transform: scale(0.96);
+}
+
+@media (hover: hover) {
+  .nav-btn:hover {
+    border-color: var(--md-primary-dim);
+    background: var(--md-surface-container);
+  }
+}
+
+.nav-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.nav-btn.primary {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  border-color: var(--md-primary);
+}
+
+@media (hover: hover) {
+  .nav-btn.primary:hover {
+    opacity: 0.9;
+    background: var(--md-primary);
+  }
+}
+
+.slide-counter {
+  font-size: 13px;
+  color: var(--md-outline);
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ==========================================================================
+   ANIMATIONS & REVEALS
+   ========================================================================== */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.reveal-step {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.reveal-step.revealed {
+  animation: fadeSlideUp 500ms var(--ease) forwards;
+}
+
+.delay-1 { animation-delay: 100ms; }
+.delay-2 { animation-delay: 200ms; }
+.delay-3 { animation-delay: 300ms; }
+.delay-4 { animation-delay: 400ms; }
+
+
+/* ==========================================================================
+   SCROLLBAR — Hidden on touch, minimal on desktop
+   ========================================================================== */
+.slide::-webkit-scrollbar {
+  width: 3px;
+}
+
+.slide::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.slide::-webkit-scrollbar-thumb {
+  background-color: var(--md-outline-variant);
+  border-radius: 3px;
+}
+
+@media (pointer: coarse) {
+  .slide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+
+/* ==========================================================================
+   DESKTOP PROGRESSIVE ENHANCEMENT
+   ========================================================================== */
+@media (min-width: 600px) {
+  main {
+    align-items: center;
+    padding: 32px 24px;
+  }
+
+  #slide-container {
+    max-width: 560px;
+  }
+
+  .slide {
+    padding: 36px 32px;
+    gap: 24px;
+    border-radius: var(--radius-xl);
+  }
+
+  .slide-question {
+    font-size: 22px;
+  }
+
+  .choice-item {
+    padding: 18px 20px;
+  }
+}
