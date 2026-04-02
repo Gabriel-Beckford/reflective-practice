@@ -1,3 +1,5 @@
+import { GeminiClientError, generateAssistantTurn, testGeminiConnection } from "./js/chat/adapters/gemini-client.js";
+
 const PHASES = [
   {
     key: "CE",
@@ -25,18 +27,35 @@ const PHASES = [
   }
 ];
 
+const CONNECTION_STATUS = {
+  NOT_CONFIGURED: "Not configured",
+  CONNECTING: "Connecting",
+  CONNECTED: "Connected",
+  FAILED: "Failed"
+};
+
 const appState = {
   screen: 1,
   mode: "Type",
   phaseIndex: 0,
-  followUpIndex: 0,
   phaseResponses: {
     CE: [],
     RO: [],
     AC: [],
     AE: []
   },
-  shareWithPeers: false
+  phaseAssistantTurns: {
+    CE: [],
+    RO: [],
+    AC: [],
+    AE: []
+  },
+  shareWithPeers: false,
+  sessionToken: "",
+  connectionStatus: CONNECTION_STATUS.NOT_CONFIGURED,
+  connectionMessage: "Connect to Gemini before starting chat.",
+  generationInFlight: false,
+  generationError: ""
 };
 
 const root = document.getElementById("chatbot-root");
@@ -62,39 +81,27 @@ function summarizePhase(responses) {
   return `${firstLine.slice(0, 157)}...`;
 }
 
-function extractKeywords(text) {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z\s]/g, " ")
-    .split(/\s+/)
-    .filter((w) => w.length > 4)
-    .slice(0, 3);
+function mapFailureMessage(code) {
+  if (code === "timeout") {
+    return "Request timed out. Check connection and retry.";
+  }
+  if (code === "rate_limit") {
+    return "Rate limit reached. Wait a moment and retry.";
+  }
+  if (code === "invalid_key") {
+    return "Gemini credentials are invalid. Update server-side key and reconnect.";
+  }
+  if (code === "offline" || code === "network") {
+    return "You're offline or Gemini is unreachable. Reconnect and retry.";
+  }
+  return "Unable to generate the next prompt right now.";
 }
 
-function buildFollowUps(phaseKey, responseText) {
-  const keywords = extractKeywords(responseText);
-  const keywordHint = keywords.length ? ` around ${keywords.join(", ")}` : "";
-
-  const followUpLibrary = {
-    CE: [
-      `What happened immediately before that moment${keywordHint}?`,
-      "What detail from that event still feels most important right now?"
-    ],
-    RO: [
-      "Which emotion felt strongest for you during that moment, and why?",
-      "If a colleague observed the class, what might they say they noticed in student reactions?"
-    ],
-    AC: [
-      "What pattern have you seen across similar lessons?",
-      "Which principle or framework best explains why this unfolded that way?"
-    ],
-    AE: [
-      "What exact action will you test first, and when will you try it?",
-      "How will you know whether the change is working for students?"
-    ]
-  };
-
-  return followUpLibrary[phaseKey];
+function normalizeClientError(error) {
+  if (error instanceof GeminiClientError) {
+    return error;
+  }
+  return new GeminiClientError("unknown", "Unexpected Gemini error", { cause: error?.message });
 }
 
 function render() {
@@ -110,20 +117,35 @@ function render() {
 }
 
 function renderWelcomeScreen() {
+  const statusClass = appState.connectionStatus.toLowerCase().replaceAll(" ", "-");
+
   root.innerHTML = `
     <h1 class="chatbot-title">Micro-Reflection</h1>
-    <p class="chatbot-subtitle">Choose your interaction mode and begin your CE → RO → AC → AE reflection.</p>
+    <p class="chatbot-subtitle">Choose your interaction mode and connect Gemini before beginning CE → RO → AC → AE.</p>
+
+    <div class="question-box">
+      <p><strong>Gemini Connection</strong></p>
+      <label for="session-token">Session token from backend (optional)</label>
+      <input id="session-token" type="password" value="${escapeHtml(appState.sessionToken)}" placeholder="short-lived token" />
+      <p class="chatbot-hint">Long-lived API keys are kept server-side in <code>GEMINI_API_KEY</code>. The browser never sends keys directly to Google.</p>
+      <p class="chatbot-hint"><strong>Status:</strong> <span class="conn-status ${statusClass}">${appState.connectionStatus}</span> — ${escapeHtml(appState.connectionMessage)}</p>
+      <div class="actions">
+        <button class="btn" id="connect-btn" type="button" ${appState.connectionStatus === CONNECTION_STATUS.CONNECTING ? "disabled" : ""}>Test Gemini Connection</button>
+      </div>
+    </div>
+
     <div class="mode-options" role="radiogroup" aria-label="Mode select">
       <button class="mode-pill ${appState.mode === "Type" ? "active" : ""}" data-mode="Type" role="radio" aria-checked="${appState.mode === "Type"}">Type</button>
       <button class="mode-pill ${appState.mode === "Speak" ? "active" : ""}" data-mode="Speak" role="radio" aria-checked="${appState.mode === "Speak"}">Speak</button>
     </div>
+
     <p class="chatbot-hint">${
       appState.mode === "Speak"
         ? "Speak mode selected. In this standalone version, speech is simulated through text entry."
         : "Type mode selected."
     }</p>
     <div class="actions">
-      <button class="btn primary" id="begin-btn" type="button">Begin</button>
+      <button class="btn primary" id="begin-btn" type="button" ${appState.connectionStatus !== CONNECTION_STATUS.CONNECTED ? "disabled" : ""}>Begin</button>
     </div>
   `;
 
@@ -132,6 +154,32 @@ function renderWelcomeScreen() {
       appState.mode = btn.getAttribute("data-mode");
       render();
     });
+  });
+
+  document.getElementById("session-token").addEventListener("input", (event) => {
+    appState.sessionToken = event.target.value;
+    if (appState.connectionStatus !== CONNECTION_STATUS.CONNECTING) {
+      appState.connectionStatus = CONNECTION_STATUS.NOT_CONFIGURED;
+      appState.connectionMessage = "Credentials updated. Run connection test.";
+      render();
+    }
+  });
+
+  document.getElementById("connect-btn").addEventListener("click", async () => {
+    appState.connectionStatus = CONNECTION_STATUS.CONNECTING;
+    appState.connectionMessage = "Testing Gemini route and credentials...";
+    render();
+
+    try {
+      await testGeminiConnection({ sessionToken: appState.sessionToken });
+      appState.connectionStatus = CONNECTION_STATUS.CONNECTED;
+      appState.connectionMessage = "Gemini test call succeeded.";
+    } catch (error) {
+      const normalized = normalizeClientError(error);
+      appState.connectionStatus = CONNECTION_STATUS.FAILED;
+      appState.connectionMessage = mapFailureMessage(normalized.code);
+    }
+    render();
   });
 
   document.getElementById("begin-btn").addEventListener("click", () => {
@@ -152,21 +200,54 @@ function phaseProgressMarkup() {
   }).join("")}</div>`;
 }
 
+function currentPromptForPhase(phase) {
+  const assistantTurns = appState.phaseAssistantTurns[phase.key];
+  if (!assistantTurns.length) {
+    return phase.initialPrompt;
+  }
+  return assistantTurns[assistantTurns.length - 1].prompt;
+}
+
+async function generateNextPrompt(phaseKey) {
+  const phase = PHASES.find((entry) => entry.key === phaseKey);
+  const turnCount = appState.phaseResponses[phaseKey].length + 1;
+  const transcript = [
+    { role: "assistant", content: phase.initialPrompt },
+    ...appState.phaseResponses[phaseKey].map((content) => ({ role: "user", content }))
+  ];
+
+  const assistantTurn = await generateAssistantTurn({
+    sessionToken: appState.sessionToken,
+    phaseKey,
+    turnCount,
+    mode: appState.mode,
+    transcript
+  });
+
+  if (assistantTurn.phase !== phaseKey || assistantTurn.turnCount !== turnCount) {
+    throw new GeminiClientError("schema", "Assistant turn did not match expected phase/turn payload.");
+  }
+
+  appState.phaseAssistantTurns[phaseKey].push(assistantTurn);
+}
+
 function renderPhaseScreen() {
   const phase = PHASES[appState.phaseIndex];
   const responses = appState.phaseResponses[phase.key];
-  const followUps = responses.length ? buildFollowUps(phase.key, responses[0]) : [];
-  const currentPrompt = responses.length === 0 ? phase.initialPrompt : followUps[appState.followUpIndex];
+  const currentPrompt = currentPromptForPhase(phase);
+  const canSave = !appState.generationInFlight && !appState.generationError;
 
   root.innerHTML = `
     <h1 class="chatbot-title">Micro-Reflection</h1>
     ${phaseProgressMarkup()}
     <p class="chatbot-subtitle"><strong>${phase.key} · ${phase.label}</strong></p>
     <div class="question-box">${escapeHtml(currentPrompt)}</div>
+    ${appState.generationError ? `<p class="chatbot-hint" role="alert"><strong>Generation failed:</strong> ${escapeHtml(appState.generationError)}</p>` : ""}
     <label class="sr-only" for="response-input">Your response</label>
     <textarea id="response-input" placeholder="Share your reflection for ${phase.key}..."></textarea>
     <div class="actions">
-      <button class="btn primary" id="submit-response" type="button">Save Response</button>
+      <button class="btn primary" id="submit-response" type="button" ${canSave ? "" : "disabled"}>Save Response</button>
+      <button class="btn" id="retry-generation" type="button" ${appState.generationError ? "" : "disabled"}>Retry Gemini</button>
     </div>
     <div class="transcript" id="phase-transcript">
       ${responses
@@ -178,7 +259,7 @@ function renderPhaseScreen() {
     </div>
   `;
 
-  document.getElementById("submit-response").addEventListener("click", () => {
+  document.getElementById("submit-response").addEventListener("click", async () => {
     const input = document.getElementById("response-input");
     const text = input.value.trim();
 
@@ -191,19 +272,51 @@ function renderPhaseScreen() {
 
     const totalForPhase = appState.phaseResponses[phase.key].length;
     if (totalForPhase >= 3) {
+      appState.generationError = "";
       advancePhase();
       return;
     }
 
-    appState.followUpIndex += 1;
+    appState.generationInFlight = true;
+    appState.generationError = "";
     render();
+
+    try {
+      await generateNextPrompt(phase.key);
+    } catch (error) {
+      const normalized = normalizeClientError(error);
+      appState.generationError = mapFailureMessage(normalized.code);
+    } finally {
+      appState.generationInFlight = false;
+      render();
+    }
+  });
+
+  document.getElementById("retry-generation").addEventListener("click", async () => {
+    if (!appState.generationError) {
+      return;
+    }
+
+    appState.generationInFlight = true;
+    appState.generationError = "";
+    render();
+
+    try {
+      await generateNextPrompt(phase.key);
+    } catch (error) {
+      const normalized = normalizeClientError(error);
+      appState.generationError = mapFailureMessage(normalized.code);
+    } finally {
+      appState.generationInFlight = false;
+      render();
+    }
   });
 }
 
 function advancePhase() {
   if (appState.phaseIndex < PHASES.length - 1) {
     appState.phaseIndex += 1;
-    appState.followUpIndex = 0;
+    appState.generationError = "";
     render();
     return;
   }
