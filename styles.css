@@ -100,8 +100,10 @@ header {
   flex-shrink: 0;
   padding: calc(12px + env(safe-area-inset-top, 0px)) 20px 12px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
 }
 
 .header-left {
@@ -122,6 +124,48 @@ header {
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--md-outline);
+}
+
+.api-config {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.api-config label {
+  font-size: 0.75rem;
+  color: var(--md-on-surface-variant);
+}
+
+.api-config input {
+  border: 1px solid var(--md-outline-variant);
+  border-radius: 10px;
+  height: 34px;
+  padding: 0 10px;
+  min-width: 180px;
+  background: var(--md-surface);
+}
+
+.api-config button {
+  border: 1px solid var(--md-outline-variant);
+  border-radius: 10px;
+  background: var(--md-surface);
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .api-config {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .api-config input {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 
