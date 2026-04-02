@@ -2,10 +2,7 @@ let userWarmUpResponse = '';
 let userWarmUpFollowUp = '';
 
 const GEMINI_MODEL = 'gemini-2.5-flash';
-const GEMINI_API_KEY = typeof window.GEMINI_API_KEY === 'string' ? window.GEMINI_API_KEY.trim() : '';
-const GEMINI_API_URL = GEMINI_API_KEY
-  ? `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`
-  : '';
+const API_KEY_STORAGE_KEY = 'gemini_api_key';
 
 const state = {
   currentSlide: 0,
@@ -15,6 +12,19 @@ const state = {
   slide12Error: false,
   slide12Feedback: '',
 };
+
+let geminiApiKey = resolveInitialApiKey();
+
+function resolveInitialApiKey() {
+  const fromWindow = typeof window.GEMINI_API_KEY === 'string' ? window.GEMINI_API_KEY.trim() : '';
+  if (fromWindow) return fromWindow;
+  try {
+    const fromStorage = localStorage.getItem(API_KEY_STORAGE_KEY);
+    return typeof fromStorage === 'string' ? fromStorage.trim() : '';
+  } catch {
+    return '';
+  }
+}
 
 const slides = [
   {
@@ -135,6 +145,38 @@ function render() {
   wireSlideSpecificHandlers(slide.id);
 }
 
+function getGeminiApiUrl() {
+  if (!geminiApiKey) return '';
+  return `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiApiKey}`;
+}
+
+function wireApiConfig() {
+  const input = document.getElementById('api-key-input');
+  const saveBtn = document.getElementById('save-api-key');
+  if (!input || !saveBtn) return;
+
+  if (geminiApiKey) {
+    input.value = geminiApiKey;
+  }
+
+  saveBtn.addEventListener('click', () => {
+    geminiApiKey = input.value.trim();
+    try {
+      if (geminiApiKey) {
+        localStorage.setItem(API_KEY_STORAGE_KEY, geminiApiKey);
+      } else {
+        localStorage.removeItem(API_KEY_STORAGE_KEY);
+      }
+    } catch {
+      // no-op when storage is unavailable
+    }
+    saveBtn.textContent = 'Saved';
+    setTimeout(() => {
+      saveBtn.textContent = 'Save';
+    }, 1200);
+  });
+}
+
 function wireNav() {
   const backBtn = document.getElementById('back-btn');
   const nextBtn = document.getElementById('next-btn');
@@ -209,8 +251,7 @@ function wireSlideSpecificHandlers(slideId) {
       console.error('Gemini API error:', error);
       state.slide12Pending = false;
       state.slide12Error = true;
-      state.slide12Feedback =
-        'Error: We could not get an AI follow-up right now. Please check your connection and try again.';
+      state.slide12Feedback = `Error: ${error instanceof Error ? error.message : 'We could not get an AI follow-up right now.'}`;
       render();
     }
   });
@@ -224,8 +265,9 @@ function formatWarmupFeedback(message, isPending) {
 }
 
 async function requestGeminiFollowUp(userText) {
-  if (!GEMINI_API_URL) {
-    return buildLocalFollowUp(userText);
+  const apiUrl = getGeminiApiUrl();
+  if (!apiUrl) {
+    throw new Error('Missing Gemini API key. Add your key in the header and try again.');
   }
 
   const prompt = `
@@ -242,7 +284,7 @@ ${userText}
 
   let response;
   try {
-    response = await fetch(GEMINI_API_URL, {
+    response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
@@ -259,16 +301,16 @@ ${userText}
   }
 
   if (!response.ok) {
-    if ([401, 403, 404, 429].includes(response.status)) {
-      return buildLocalFollowUp(userText);
-    }
-    throw new Error(`Gemini request failed with status ${response.status}`);
+    const authHint = [401, 403].includes(response.status)
+      ? 'Check that your API key is valid and has Gemini access.'
+      : '';
+    throw new Error(`Gemini request failed with status ${response.status}. ${authHint}`.trim());
   }
 
   const data = await response.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
   if (!text) {
-    return buildLocalFollowUp(userText);
+    throw new Error('Gemini returned an empty response.');
   }
 
   return normalizeFollowUpQuestion(text);
@@ -290,19 +332,5 @@ function normalizeFollowUpQuestion(text) {
   return `${cleaned.replace(/[.!,;:]+$/, '')}?`;
 }
 
-function buildLocalFollowUp(userText) {
-  const cleaned = userText.replace(/\s+/g, ' ').trim();
-  const topic = cleaned
-    .replace(/^\d+[\).\s-]*/, '')
-    .split(/[.!?]/)[0]
-    .slice(0, 80)
-    .trim();
-
-  const prompt = topic
-    ? `What is one small change you can test next lesson for "${topic}", and what evidence will show it helped?`
-    : 'What one small change will you test next lesson, and what evidence will show that it improved student learning?';
-
-  return normalizeFollowUpQuestion(prompt);
-}
-
+wireApiConfig();
 render();
