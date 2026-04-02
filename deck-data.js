@@ -422,15 +422,16 @@ window.DECK_DATA = {
     {
       id: "T.1",
       section: "Slide T.1: Transition to Chatbot",
-      type: "content",
+      type: "transition",
       badge: "Slide T.1",
       title: "Transition to Chatbot",
       body: [
         "You're now ready to create your own micro-reflection. The AI will act as a conversational partner, dynamically guiding you through Kolb's cycle.",
-        "You can type or speak. At the end, you'll download your full micro-reflection as a PDF.",
-        "Call-to-Action: Start Micro-Reflection Chatbot",
-        "Subtext: When you've finished and downloaded that PDF, return here to complete the module."
-      ]
+        "You can type or speak. At the end, you'll download your full micro-reflection as a PDF."
+      ],
+      ctaLabel: "Start Micro-Reflection Chatbot",
+      ctaUrl: "chatbot.html",
+      ctaHelperText: "After you finish and download your chatbot PDF, return here to complete the module."
     },
     {
       id: "5.1",

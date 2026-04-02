@@ -463,6 +463,24 @@
     const wrap = document.createElement("section");
     wrap.className = "transition-renderer";
     appendBodyCopy(wrap, slide);
+
+    if (slide.ctaLabel) {
+      const ctaBtn = document.createElement("a");
+      ctaBtn.className = "cta-btn";
+      ctaBtn.textContent = slide.ctaLabel;
+      ctaBtn.href = slide.ctaUrl || "chatbot.html";
+      ctaBtn.target = "_blank";
+      ctaBtn.rel = "noopener noreferrer";
+      wrap.appendChild(ctaBtn);
+    }
+
+    if (slide.ctaHelperText) {
+      const helper = document.createElement("p");
+      helper.className = "cta-subtext";
+      helper.textContent = slide.ctaHelperText;
+      wrap.appendChild(helper);
+    }
+
     card.appendChild(wrap);
   }
 
