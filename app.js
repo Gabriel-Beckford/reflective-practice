@@ -72,7 +72,7 @@ const slides = [
           <textarea id="warmup-input" placeholder="1. I notice...\n2. My challenges are...\n3. My goal is...">${escapeHtml(userWarmUpResponse)}</textarea>
           <button class="nav-btn submit-btn" id="submit-warmup">Submit</button>
         </div>
-        <div class="feedback-card ${state.slide12Submitted ? '' : 'hidden'}" id="warmup-feedback">
+        <div class="feedback-card ${state.slide12Submitted ? 'visible' : 'hidden'}" id="warmup-feedback">
           Thank you for sharing. I hear the tensions and priorities in your classroom context. To deepen your reflection:
           <br><br><strong>Follow-up:</strong> Which one challenge most affects your students' learning right now, and why?
         </div>
@@ -239,11 +239,27 @@ ${userText}
       throw new Error('Gemini response did not contain text.');
     }
 
-    return text;
+    return normalizeFollowUpQuestion(text);
   } catch (error) {
     console.error('Gemini API error:', error);
     return "Which one challenge currently has the biggest impact on student learning, and what makes it so significant right now?";
   }
+}
+
+function normalizeFollowUpQuestion(text) {
+  const compact = text.replace(/\s+/g, ' ').trim();
+  if (!compact) {
+    return "Which one challenge currently has the biggest impact on student learning, and what makes it so significant right now?";
+  }
+
+  const firstSentence = compact.split(/(?<=[.?!])\s+/)[0];
+  const cleaned = firstSentence.replace(/^["'“”]+|["'“”]+$/g, '').trim();
+
+  if (cleaned.endsWith('?')) {
+    return cleaned;
+  }
+
+  return `${cleaned.replace(/[.!,;:]+$/, '')}?`;
 }
 
 render();
