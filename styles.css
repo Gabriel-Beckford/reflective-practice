@@ -101,6 +101,41 @@ progress {
   padding: 0.75rem;
 }
 
+.assistive-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 var(--space-3);
+}
+
+.assistive-status {
+  margin: 0;
+  color: #4a4458;
+  font-size: 0.9rem;
+}
+
+.secondary-action {
+  background: #e9ddff;
+  color: #351e67;
+}
+
+.handoff-card,
+.feedback-card,
+.summary-card,
+.export-card {
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 0.75rem;
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  background: #faf8ff;
+}
+
+.rating-row {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
 .validation-message {
   min-height: 1.25rem;
   color: #8b1b1b;
