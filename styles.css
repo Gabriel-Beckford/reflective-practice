@@ -25,6 +25,7 @@
   --md-surface-low: #F7F2F9;
   --md-surface-container: #F3EDF7;
   --md-surface-high: #ECE6F0;
+  --md-surface-bright: #FFF7FC;
   --md-outline: #79747E;
   --md-outline-variant: #CAC4D0;
 
@@ -67,6 +68,11 @@ body {
   overflow: hidden;
   position: relative;
   background: var(--md-surface-low);
+}
+
+.material-symbols-rounded {
+  font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24;
+  line-height: 1;
 }
 
 
@@ -148,7 +154,7 @@ main {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 20px 16px;
+  padding: 28px 20px 36px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   z-index: 1;
@@ -156,7 +162,7 @@ main {
 
 #slide-container {
   width: 100%;
-  max-width: 520px;
+  max-width: 920px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -168,13 +174,13 @@ main {
    ========================================================================== */
 .slide {
   width: 100%;
-  background: var(--md-surface);
+  background: linear-gradient(180deg, var(--md-surface-bright) 0%, var(--md-surface) 100%);
   border-radius: var(--radius-lg);
   border: 1px solid var(--md-outline-variant);
-  padding: 28px 24px;
+  padding: 36px 34px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   opacity: 0;
   transform: translateY(16px);
   animation: slideUp var(--dur-long) var(--ease) forwards;
@@ -202,11 +208,11 @@ main {
   gap: 6px;
   background: var(--md-tertiary-container);
   color: var(--md-on-tertiary-container);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 6px 14px;
+  padding: 8px 16px;
   border-radius: var(--radius-sm);
   align-self: flex-start;
 }
@@ -223,10 +229,11 @@ main {
    ========================================================================== */
 .slide-question {
   font-family: 'Fraunces', Georgia, serif;
-  font-size: 20px;
+  font-size: clamp(1.65rem, 1.2rem + 1.2vw, 2.15rem);
   font-weight: 500;
-  line-height: 1.45;
+  line-height: 1.35;
   color: var(--md-on-surface);
+  max-width: 28ch;
 }
 
 .slide-question strong {
@@ -266,6 +273,40 @@ main {
 .choice-item:active {
   transform: scale(0.985);
 }
+
+.slide-copy {
+  font-size: clamp(1.05rem, 0.98rem + 0.28vw, 1.2rem);
+  line-height: 1.65;
+  max-width: 64ch;
+}
+
+.icon-chip {
+  color: var(--md-primary);
+  background: var(--md-primary-container);
+  border: 1px solid color-mix(in srgb, var(--md-primary) 20%, var(--md-primary-container));
+  border-radius: 999px;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+}
+
+.goals-pyramid {
+  width: 100%;
+  justify-items: stretch;
+  gap: 14px;
+}
+
+.goal-tier {
+  max-width: none;
+  padding: 14px 18px;
+  border-radius: 20px;
+}
+
+.goal-tier.top { width: min(82%, 680px); justify-self: center; }
+.goal-tier.mid { width: min(90%, 760px); justify-self: center; }
+.goal-tier.base { width: min(98%, 840px); justify-self: center; }
 
 @media (hover: hover) {
   .choice-item:hover {
@@ -440,8 +481,8 @@ footer {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  border-radius: 999px;
   border: 1.5px solid var(--md-outline-variant);
   background: var(--md-surface);
   color: var(--md-on-surface-variant);
@@ -469,6 +510,10 @@ footer {
   height: 16px;
 }
 
+.nav-btn .material-symbols-rounded {
+  font-size: 18px;
+}
+
 .nav-btn.primary {
   background: var(--md-primary);
   color: var(--md-on-primary);
@@ -486,6 +531,14 @@ footer {
   font-size: 13px;
   color: var(--md-outline);
   font-variant-numeric: tabular-nums;
+}
+
+.slide-footer {
+  margin-top: 12px;
+}
+
+.slide-count {
+  font-size: 1rem;
 }
 
 
@@ -558,21 +611,17 @@ footer {
 @media (min-width: 600px) {
   main {
     align-items: center;
-    padding: 32px 24px;
+    padding: 36px 28px 44px;
   }
 
   #slide-container {
-    max-width: 560px;
+    max-width: 960px;
   }
 
   .slide {
-    padding: 36px 32px;
-    gap: 24px;
+    padding: 46px 44px;
+    gap: 28px;
     border-radius: var(--radius-xl);
-  }
-
-  .slide-question {
-    font-size: 22px;
   }
 
   .choice-item {
