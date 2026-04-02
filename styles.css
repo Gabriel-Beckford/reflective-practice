@@ -325,6 +325,18 @@ main {
   max-width: 64ch;
 }
 
+.fixed-text-block {
+  white-space: pre-wrap;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-size: clamp(1rem, 0.94rem + 0.28vw, 1.125rem);
+  line-height: 1.72;
+  max-width: 68ch;
+  background: var(--md-surface-container);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+}
+
 .icon-chip {
   color: var(--md-primary);
   background: var(--md-primary-container);

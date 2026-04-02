@@ -335,6 +335,7 @@ window.DECK_DATA = {
       type: "content",
       badge: "Slide 4.2",
       title: "Strong Example (Example A)",
+      fixedTextBlock: true,
       body: [
         "During Thursday's speaking lesson... I asked students to role-play a job interview (CE). I noticed I felt anxious because several students kept switching to Kreyòl... A visiting teacher told me the students seemed confident using Kreyòl as a bridge (RO). Reading about translanguaging (García & Wei, 2014), I realised allowing strategic use of Kreyòl might support English development (AC). Next week, I will explicitly build in 'Kreyòl bridge' moments where students draft in Kreyòl before performing in English (AE)."
       ]
@@ -347,14 +348,18 @@ window.DECK_DATA = {
       title: "Strong Example Evaluation",
       question: "Does this reflection demonstrate each of the following qualities? (Select Yes or No for each)",
       statements: [
-        "Describes specific experience [Yes]",
-        "Includes feelings/observations [Yes]",
-        "Considers multiple perspectives [Yes]",
-        "Connects to theory [Yes]",
-        "Proposes actionable steps [Yes]",
-        "Explains how to measure effect [Yes]"
+        "Describes specific experience",
+        "Includes feelings/observations",
+        "Considers multiple perspectives",
+        "Connects to theory",
+        "Proposes actionable steps",
+        "Explains how to measure effect"
       ],
-      feedback: "[AI confirms why this is a strong reflection and asks a follow-up.]",
+      expectedAnswers: ["Yes", "Yes", "Yes", "Yes", "Yes", "Yes"],
+      feedbackSuccess:
+        "Strong reflection is specific, emotionally aware, and multi-perspective. It also uses theory to explain the event and includes clear, testable next steps.",
+      feedbackNeedsWork:
+        "For this strong example, each criterion should be marked Yes. Recheck where the writer describes evidence, uses theory, and plans measurable action.",
       responseKey: "eval_4_3"
     },
     {
@@ -363,6 +368,7 @@ window.DECK_DATA = {
       type: "content",
       badge: "Slide 4.4",
       title: "Weak Example (Example B)",
+      fixedTextBlock: true,
       body: [
         "I taught a speaking lesson. It went okay. Some students spoke in Kreyòl which was a problem. I think group work is sometimes difficult in my context. Maybe I should try something different next time. I need to read more. Overall, the lesson was fine."
       ]
@@ -375,14 +381,18 @@ window.DECK_DATA = {
       title: "Weak Example Evaluation",
       question: "Does this reflection demonstrate each of the following qualities? (Select Yes or No for each)",
       statements: [
-        "Describes specific experience [No]",
-        "Includes feelings/observations [No]",
-        "Considers multiple perspectives [No]",
-        "Connects to theory [No]",
-        "Proposes actionable steps [No]",
-        "Explains how to measure effect [No]"
+        "Describes specific experience",
+        "Includes feelings/observations",
+        "Considers multiple perspectives",
+        "Connects to theory",
+        "Proposes actionable steps",
+        "Explains how to measure effect"
       ],
-      feedback: "[AI explains what is missing from this reflection.]",
+      expectedAnswers: ["No", "No", "No", "No", "No", "No"],
+      feedbackSuccess:
+        "Weak reflection stays general and lacks evidence, theoretical grounding, and measurable next actions. This is why each criterion is No.",
+      feedbackNeedsWork:
+        "For this weak example, each criterion should be marked No. Review what is missing: specificity, multiple perspectives, theory, and concrete measurable action.",
       responseKey: "eval_4_5"
     },
     {
