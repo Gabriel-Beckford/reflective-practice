@@ -1,8 +1,66 @@
 (() => {
   const { slides } = window.DECK_DATA;
+  const STORAGE_KEY = "reflective-practice.deck-state.v1";
+
+  function normalizeSavedState(saved) {
+    if (!saved || typeof saved !== "object") return { index: 0, responses: {} };
+
+    const normalized = {
+      index: Number.isInteger(saved.index) ? saved.index : 0,
+      responses: {}
+    };
+
+    if (saved.responses && typeof saved.responses === "object") {
+      normalized.responses = saved.responses;
+      return normalized;
+    }
+
+    // Backwards compatibility with older flat `answers` storage shape.
+    if (saved.answers && typeof saved.answers === "object") {
+      const legacyResponses = {};
+      slides.forEach((slide) => {
+        if (!slide.responseKey) return;
+        if (!Object.prototype.hasOwnProperty.call(saved.answers, slide.responseKey)) return;
+        legacyResponses[slide.id] = {
+          ...(legacyResponses[slide.id] || {}),
+          [slide.responseKey]: saved.answers[slide.responseKey]
+        };
+      });
+      normalized.responses = legacyResponses;
+    }
+
+    return normalized;
+  }
+
+  function loadPersistedState() {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { index: 0, responses: {} };
+      return normalizeSavedState(JSON.parse(raw));
+    } catch (error) {
+      console.warn("Unable to hydrate saved deck responses.", error);
+      return { index: 0, responses: {} };
+    }
+  }
+
+  function persistState(state) {
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          index: state.index,
+          responses: state.responses
+        })
+      );
+    } catch (error) {
+      console.warn("Unable to persist deck responses.", error);
+    }
+  }
+
+  const persisted = loadPersistedState();
   const state = {
-    index: 0,
-    answers: {},
+    index: Math.max(0, Math.min(persisted.index || 0, slides.length - 1)),
+    responses: persisted.responses || {},
     beforeExportHook: null
   };
 
@@ -16,13 +74,17 @@
     next: document.getElementById("next-btn")
   };
 
-  function saveAnswer(key, value) {
-    if (!key) return;
-    state.answers[key] = value;
+  function saveResponse(slideId, fieldKey, value) {
+    if (!slideId || !fieldKey) return;
+    const currentSlideResponses = state.responses[slideId] || {};
+    state.responses[slideId] = { ...currentSlideResponses, [fieldKey]: value };
+    persistState(state);
   }
 
-  function getAnswer(key, fallback = null) {
-    return Object.prototype.hasOwnProperty.call(state.answers, key) ? state.answers[key] : fallback;
+  function getResponse(slideId, fieldKey, fallback = null) {
+    const slideResponses = state.responses[slideId];
+    if (!slideResponses || typeof slideResponses !== "object") return fallback;
+    return Object.prototype.hasOwnProperty.call(slideResponses, fieldKey) ? slideResponses[fieldKey] : fallback;
   }
 
   function matchesCorrect(selected, correct = []) {
@@ -34,7 +96,7 @@
     const wrap = document.createElement("div");
     wrap.className = "choice-list";
 
-    const selected = new Set(getAnswer(slide.responseKey, []));
+    const selected = new Set(getResponse(slide.id, slide.responseKey, []));
 
     slide.options.forEach((option, index) => {
       const item = document.createElement("button");
@@ -63,7 +125,7 @@
         });
 
         const nextSelection = [...selected].sort((a, b) => a - b);
-        saveAnswer(slide.responseKey, nextSelection);
+        saveResponse(slide.id, slide.responseKey, nextSelection);
         renderFeedback(slide, nextSelection);
       });
 
@@ -90,7 +152,7 @@
   function createYesNoMatrix(slide) {
     const wrap = document.createElement("div");
     wrap.className = "choice-list";
-    const saved = getAnswer(slide.responseKey, {});
+    const saved = getResponse(slide.id, slide.responseKey, {});
 
     slide.statements.forEach((statement, index) => {
       const group = document.createElement("div");
@@ -118,7 +180,7 @@
         btn.append(marker, text);
         btn.addEventListener("click", () => {
           saved[index] = choice;
-          saveAnswer(slide.responseKey, saved);
+          saveResponse(slide.id, slide.responseKey, saved);
           [...row.children].forEach((node) => node.classList.remove("selected"));
           btn.classList.add("selected");
           renderFeedback(slide, []);
@@ -233,8 +295,10 @@
     prompt.className = "slide-copy";
     prompt.textContent = slide.prompt || "";
     const area = document.createElement("textarea");
-    area.value = getAnswer(slide.responseKey, "");
-    area.addEventListener("input", () => saveAnswer(slide.responseKey, area.value));
+    area.value = getResponse(slide.id, slide.responseKey, "");
+    const saveTextareaResponse = () => saveResponse(slide.id, slide.responseKey, area.value);
+    area.addEventListener("input", saveTextareaResponse);
+    area.addEventListener("change", saveTextareaResponse);
     inputWrap.append(prompt, area);
 
     wrap.appendChild(inputWrap);
@@ -256,7 +320,7 @@
         btn.className = "choice-item";
         btn.textContent = actionText;
         btn.addEventListener("click", () => {
-          saveAnswer(slide.responseKey || `cta_${slide.id}`, index);
+          saveResponse(slide.id, slide.responseKey || `cta_${slide.id}`, index);
           if (slide.branching?.length) {
             jumpTo(resolveNextIndex(slide));
             return;
@@ -295,17 +359,17 @@
     const interactionType = resolveInteractionType(slide);
 
     if (interactionType === "free-response") {
-      const value = (getAnswer(key, "") || "").trim();
+      const value = (getResponse(slide.id, key, "") || "").trim();
       if (!value) return { valid: false, message: "Please add your response before moving on." };
     }
 
     if (["single-choice", "multi-select"].includes(interactionType)) {
-      const picked = getAnswer(key, []);
+      const picked = getResponse(slide.id, key, []);
       if (!picked.length) return { valid: false, message: "Please select an option before moving on." };
     }
 
     if (interactionType === "yes-no-matrix") {
-      const entries = Object.values(getAnswer(key, {}));
+      const entries = Object.values(getResponse(slide.id, key, {}));
       if (entries.length < slide.statements.length) {
         return { valid: false, message: "Please answer every statement before moving on." };
       }
@@ -316,11 +380,12 @@
 
   function jumpTo(index) {
     state.index = Math.max(0, Math.min(index, slides.length - 1));
+    persistState(state);
     render();
   }
 
   function resolveNextIndex(slide) {
-    const selected = getAnswer(slide.responseKey, []);
+    const selected = getResponse(slide.id, slide.responseKey, []);
     if (slide.branching && slide.branching.length) {
       for (const branch of slide.branching) {
         if (matchesCorrect(selected, branch.ifSelected || [])) return branch.to;
@@ -355,8 +420,8 @@
     feedback.innerHTML = '<div class="feedback-title">Feedback</div><div class="feedback-body"></div>';
     card.appendChild(feedback);
 
-    if (slide.feedback && getAnswer(slide.responseKey, null) !== null) {
-      const seed = getAnswer(slide.responseKey, []);
+    if (slide.feedback && getResponse(slide.id, slide.responseKey, null) !== null) {
+      const seed = getResponse(slide.id, slide.responseKey, []);
       renderFeedback(slide, Array.isArray(seed) ? seed : []);
     }
 
@@ -399,7 +464,7 @@
     getSlides: () => slides,
     exportResponses: () => ({
       exportedAt: new Date().toISOString(),
-      responses: state.answers,
+      responses: state.responses,
       deckTitle: window.DECK_DATA.title
     }),
     onBeforeExport: (fn) => {
