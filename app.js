@@ -9,6 +9,9 @@ const state = {
   currentSlide: 0,
   reveals: { '1.1': 0, '2.1': 0 },
   slide12Submitted: false,
+  slide12Pending: false,
+  slide12Feedback:
+    "Thank you for sharing. I hear the tensions and priorities in your classroom context. To deepen your reflection:\n\nFollow-up: Which one challenge most affects your students' learning right now, and why?",
 };
 
 const slides = [
@@ -73,8 +76,7 @@ const slides = [
           <button class="nav-btn submit-btn" id="submit-warmup">Submit</button>
         </div>
         <div class="feedback-card ${state.slide12Submitted ? 'visible' : 'hidden'}" id="warmup-feedback">
-          Thank you for sharing. I hear the tensions and priorities in your classroom context. To deepen your reflection:
-          <br><br><strong>Follow-up:</strong> Which one challenge most affects your students' learning right now, and why?
+          ${formatWarmupFeedback(state.slide12Feedback, state.slide12Pending)}
         </div>
         <div class="input-wrap ${state.slide12Submitted ? '' : 'hidden'}" id="followup-wrap">
           <textarea id="followup-input" placeholder="Optional follow-up response...">${escapeHtml(userWarmUpFollowUp)}</textarea>
@@ -186,24 +188,34 @@ function wireSlideSpecificHandlers(slideId) {
       return;
     }
 
+    if (state.slide12Pending) {
+      return;
+    }
+
+    state.slide12Submitted = true;
+    state.slide12Pending = true;
+    state.slide12Feedback =
+      "Thank you for sharing. I hear the tensions and priorities in your classroom context. Let me generate a tailored follow-up question...";
+    render();
+
     submitBtn.disabled = true;
     submitBtn.textContent = 'Thinking...';
 
     const aiFollowUp = await requestGeminiFollowUp(userWarmUpResponse);
-    state.slide12Submitted = true;
+    state.slide12Pending = false;
+    state.slide12Feedback = `Thank you for sharing. I hear the tensions and priorities in your classroom context.\n\nFollow-up: ${aiFollowUp}`;
     render();
-
-    const renderedFeedbackCard = document.getElementById('warmup-feedback');
-    if (renderedFeedbackCard) {
-      renderedFeedbackCard.innerHTML = `
-        Thank you for sharing. I hear the tensions and priorities in your classroom context.
-        <br><br><strong>Follow-up:</strong> ${escapeHtml(aiFollowUp)}
-      `;
-    }
 
     submitBtn.disabled = false;
     submitBtn.textContent = 'Submit';
   });
+}
+
+function formatWarmupFeedback(message, isPending) {
+  const escaped = escapeHtml(message);
+  const withBreaks = escaped.replaceAll('\n', '<br>');
+  const pendingBadge = isPending ? '<br><br><em>Thinking...</em>' : '';
+  return `${withBreaks}${pendingBadge}`;
 }
 
 async function requestGeminiFollowUp(userText) {
@@ -217,9 +229,13 @@ ${userText}
 `.trim();
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
     const response = await fetch(GEMINI_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
@@ -228,6 +244,7 @@ ${userText}
         },
       }),
     });
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`Gemini request failed with status ${response.status}`);
