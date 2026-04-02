@@ -253,7 +253,8 @@ const elements = {
   slideTitle: document.getElementById("slide-title"),
   slideContent: document.getElementById("slide-content"),
   prevButton: document.getElementById("prev-button"),
-  nextButton: document.getElementById("next-button")
+  nextButton: document.getElementById("next-button"),
+  slideRegion: document.getElementById("slide-region")
 };
 
 function recordConversationEntry(slide, event) {
@@ -350,7 +351,7 @@ function renderChatInput(slide) {
   const validation = validateQuestionSlide(slide);
 
   return `
-    <div class="chat-transcript" aria-live="polite">
+    <div class="chat-transcript" aria-live="polite" role="log" aria-label="Chat transcript">
       ${renderTranscript(responseEntry.transcript || []) || "<p>Coach is preparing the first prompt…</p>"}
     </div>
     <label for="response-input-${slide.id}">Your response</label>
@@ -363,12 +364,12 @@ function renderChatInput(slide) {
       ${pending ? "disabled" : ""}
     >${draft}</textarea>
     <div class="assistive-actions">
-      <button id="speech-button-${slide.id}" type="button" class="touch-target secondary-action" ${pending ? "disabled" : ""}>🎤 Speak</button>
+      <button id="speech-button-${slide.id}" type="button" class="touch-target secondary-action" aria-label="Use speech input for ${slide.title}" ${pending ? "disabled" : ""}>🎤 Speak</button>
       <p id="speech-status-${slide.id}" class="assistive-status" aria-live="polite"></p>
     </div>
-    <button id="send-button-${slide.id}" type="button" class="touch-target" ${pending ? "disabled" : ""}>${pending ? "Sending..." : "Send"}</button>
+    <button id="send-button-${slide.id}" type="button" class="touch-target" aria-label="Send response for ${slide.title}" ${pending ? "disabled" : ""}>${pending ? "Sending..." : "Send"}</button>
     ${slide.id === "s5-phases" ? renderSection57SummaryCard() : ""}
-    <p id="validation-message-${slide.id}" class="validation-message" role="status" aria-live="polite">${validation.message}</p>
+    <p id="validation-message-${slide.id}" class="validation-message" role="status" aria-live="polite" tabindex="-1">${validation.message}</p>
   `;
 }
 
@@ -438,7 +439,7 @@ function renderQuestionInput(slide) {
       <section class="handoff-card" aria-labelledby="padlet-handoff-title">
         <h3 id="padlet-handoff-title">Section 6 · Optional Padlet handoff</h3>
         <p>If you want to continue planning with peers, hand off to Padlet in a new tab.</p>
-        <button id="padlet-button" type="button" class="touch-target secondary-action">Open Padlet workspace</button>
+        <button id="padlet-button" type="button" class="touch-target secondary-action" aria-label="Open Padlet workspace in a new tab">Open Padlet workspace</button>
         <p class="assistive-status">You are leaving this reflection page temporarily and can return anytime.</p>
       </section>
     `
@@ -465,7 +466,7 @@ function renderQuestionInput(slide) {
           <textarea id="feedback-comment" class="response-input" rows="3" placeholder="Share what worked well or what to improve.">${
             appState.feedback.comment || ""
           }</textarea>
-          <button id="feedback-submit" type="submit" class="touch-target secondary-action">Submit feedback</button>
+          <button id="feedback-submit" type="submit" class="touch-target secondary-action" aria-label="Submit feedback form">Submit feedback</button>
           <p id="feedback-status" class="assistive-status" role="status" aria-live="polite">${appState.feedback.status || ""}</p>
         </form>
       </section>
@@ -482,12 +483,12 @@ function renderQuestionInput(slide) {
       placeholder="Type your reflection here"
     >${currentValue || ""}</textarea>
     <div class="assistive-actions">
-      <button id="speech-button-${slide.id}" type="button" class="touch-target secondary-action">🎤 Speak</button>
+      <button id="speech-button-${slide.id}" type="button" class="touch-target secondary-action" aria-label="Use speech input for ${slide.title}">🎤 Speak</button>
       <p id="speech-status-${slide.id}" class="assistive-status" aria-live="polite"></p>
     </div>
     ${section6PadletMarkup}
     ${section7FeedbackMarkup}
-    <p id="validation-message-${slide.id}" class="validation-message" role="status" aria-live="polite">${localFeedback}</p>
+    <p id="validation-message-${slide.id}" class="validation-message" role="status" aria-live="polite" tabindex="-1">${localFeedback}</p>
   `;
 }
 
@@ -734,10 +735,29 @@ function renderCompletionView() {
     <section class="export-card" aria-labelledby="export-title">
       <h3 id="export-title">Export your reflection</h3>
       <label for="learner-name-input">Learner name (optional)</label>
-      <input id="learner-name-input" class="response-input" type="text" placeholder="Enter your name for the report" />
-      <button id="export-pdf-button" type="button" class="touch-target">Download PDF</button>
+      <input id="learner-name-input" class="response-input" type="text" aria-label="Learner name for PDF export" placeholder="Enter your name for the report" />
+      <button id="export-pdf-button" type="button" class="touch-target" aria-label="Download reflection summary as PDF">Download PDF</button>
     </section>
   `;
+}
+
+function annotateLottiePlayers() {
+  document.querySelectorAll("lottie-player").forEach((player, index) => {
+    if (!player.hasAttribute("role")) {
+      player.setAttribute("role", "img");
+    }
+    if (!player.hasAttribute("aria-label")) {
+      player.setAttribute("aria-label", `Animated illustration ${index + 1}`);
+    }
+  });
+}
+
+function focusSlideRegion() {
+  if (!elements.slideRegion) {
+    return;
+  }
+  elements.slideRegion.setAttribute("tabindex", "-1");
+  elements.slideRegion.focus();
 }
 
 function bindQuestionInput(slide) {
@@ -815,6 +835,8 @@ function renderSlide(slideId) {
   updateProgressIndicator(slide);
   updateNavigationState(slide);
   bindQuestionInput(slide);
+  annotateLottiePlayers();
+  focusSlideRegion();
   recordConversationEntry(slide, "viewed");
 }
 
@@ -855,7 +877,8 @@ function goToNextSlide() {
   if (!validation.valid) {
     const validationNode = document.getElementById(`validation-message-${slide.id}`);
     if (validationNode) {
-      validationNode.textContent = validation.message;
+      validationNode.textContent = `⚠ ${validation.message}`;
+      validationNode.focus();
     }
     return;
   }
@@ -880,6 +903,19 @@ function goToNextSlide() {
 function initializeNavigation() {
   elements.prevButton.addEventListener("click", goToPreviousSlide);
   elements.nextButton.addEventListener("click", goToNextSlide);
+  document.addEventListener("keydown", (event) => {
+    if (event.target?.matches("textarea, input, [contenteditable='true']")) {
+      return;
+    }
+    if (event.key === "ArrowLeft" && !elements.prevButton.disabled) {
+      event.preventDefault();
+      goToPreviousSlide();
+    }
+    if (event.key === "ArrowRight" && !elements.nextButton.disabled) {
+      event.preventDefault();
+      goToNextSlide();
+    }
+  });
 }
 
 initializeNavigation();
