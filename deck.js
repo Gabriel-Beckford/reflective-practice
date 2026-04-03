@@ -5,12 +5,13 @@
   let storageEnabled = true;
 
   function normalizeSavedState(saved) {
-    if (!saved || typeof saved !== "object") return { index: 0, responses: {}, completed: false };
+    if (!saved || typeof saved !== "object") return { index: 0, responses: {}, completed: false, section3View: "linear" };
 
     const normalized = {
       index: Number.isInteger(saved.index) ? saved.index : 0,
       responses: {},
-      completed: Boolean(saved.completed)
+      completed: Boolean(saved.completed),
+      section3View: saved.section3View === "carousel" ? "carousel" : "linear"
     };
 
     if (saved.responses && typeof saved.responses === "object") {
@@ -37,16 +38,16 @@
 
   function loadPersistedState() {
     if (!storageEnabled || !window.localStorage) {
-      return memoryState || { index: 0, responses: {}, completed: false };
+      return memoryState || { index: 0, responses: {}, completed: false, section3View: "linear" };
     }
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { index: 0, responses: {}, completed: false };
+      if (!raw) return { index: 0, responses: {}, completed: false, section3View: "linear" };
       return normalizeSavedState(JSON.parse(raw));
     } catch (error) {
       console.warn("Unable to hydrate saved deck responses.", error);
       storageEnabled = false;
-      return { index: 0, responses: {}, completed: false };
+      return { index: 0, responses: {}, completed: false, section3View: "linear" };
     }
   }
 
@@ -54,7 +55,8 @@
     memoryState = {
       index: state.index,
       responses: state.responses,
-      completed: state.completed
+      completed: state.completed,
+      section3View: state.section3View
     };
     if (!storageEnabled || !window.localStorage) return;
     try {
@@ -73,6 +75,7 @@
     index: Math.max(0, Math.min(persisted.index || 0, slides.length - 1)),
     responses: persisted.responses || {},
     completed: Boolean(persisted.completed),
+    section3View: persisted.section3View === "carousel" ? "carousel" : "linear",
     beforeExportHook: null
   };
 
@@ -433,7 +436,12 @@
     if (examples.length) {
       const exampleSection = document.createElement("section");
       exampleSection.className = "text-region text-region-examples";
-      appendBodyCopy(exampleSection, examples, "slide-copy example-block");
+      examples.forEach((line) => {
+        const card = document.createElement("article");
+        card.className = "md-elevated-card";
+        appendBodyCopy(card, [line], "slide-copy example-block");
+        exampleSection.appendChild(card);
+      });
       target.appendChild(exampleSection);
     }
 
@@ -450,6 +458,44 @@
       appendBodyCopy(actionSection, [actionPrompt], "slide-action");
       target.appendChild(actionSection);
     }
+  }
+
+  function createPhaseChip(phaseTag) {
+    if (!phaseTag) return null;
+    const chip = document.createElement("span");
+    chip.className = "md-chip phase-chip";
+    chip.textContent = phaseTag;
+    return chip;
+  }
+
+  function createSegmentedControl(activeMode = "linear") {
+    const control = document.createElement("div");
+    control.className = "md-segmented-control";
+    control.setAttribute("role", "tablist");
+    control.setAttribute("aria-label", "Section 3 view mode");
+
+    const modes = [{ value: "linear", label: "Linear" }];
+    if (supportsPairedCarousel()) modes.push({ value: "carousel", label: "Paired carousel" });
+
+    modes.forEach((mode) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "md-segment";
+      btn.textContent = mode.label;
+      btn.dataset.mode = mode.value;
+      btn.setAttribute("role", "tab");
+      const selected = mode.value === activeMode;
+      btn.setAttribute("aria-selected", selected ? "true" : "false");
+      btn.classList.toggle("active", selected);
+      btn.addEventListener("click", () => {
+        state.section3View = mode.value;
+        persistState(state);
+        render();
+      });
+      control.appendChild(btn);
+    });
+
+    return control;
   }
 
   function appendOptionalList(target, slide) {
@@ -474,6 +520,8 @@
 
   const interactionModules = window.DeckInteractionModules || {};
   const SECTION_THEMES = ["dawn", "sage", "amber", "violet"];
+  const SECTION3_LABEL = "SECTION 3: IDENTIFY THE PHASE";
+  const pairedGroups = buildPairedGroups();
 
   function getSectionMeta(sectionLabel = "") {
     const normalizedLabel = String(sectionLabel || "").trim();
@@ -485,6 +533,64 @@
       : SECTION_THEMES[0];
 
     return { sectionKey, sectionTheme };
+  }
+
+  function buildPairedGroups() {
+    const groups = [];
+    const byId = new Map();
+
+    slides.forEach((slide, index) => {
+      if (!slide.pairingId) return;
+      if (!byId.has(slide.pairingId)) {
+        const group = {
+          pairingId: slide.pairingId,
+          excerptIndex: null,
+          questionIndex: null,
+          indices: [],
+          phaseTag: slide.phaseTag || ""
+        };
+        byId.set(slide.pairingId, group);
+        groups.push(group);
+      }
+
+      const group = byId.get(slide.pairingId);
+      group.indices.push(index);
+      if (slide.type === "content" && group.excerptIndex === null) group.excerptIndex = index;
+      if (slide.type === "single-choice" && group.questionIndex === null) group.questionIndex = index;
+      if (!group.phaseTag && slide.phaseTag) group.phaseTag = slide.phaseTag;
+    });
+
+    return groups.filter((group) => Number.isInteger(group.excerptIndex) && Number.isInteger(group.questionIndex));
+  }
+
+  function getPairingIdForSlide(slide) {
+    if (!slide) return null;
+    if (slide.pairingId) return slide.pairingId;
+    if (!slide.pairedExcerptId) return null;
+    const source = slides.find((item) => item.id === slide.pairedExcerptId);
+    return source?.pairingId || null;
+  }
+
+  function getPairGroupByIndex(index) {
+    const slide = slides[index];
+    if (!slide || slide.section !== SECTION3_LABEL) return null;
+    const pairingId = getPairingIdForSlide(slide);
+    if (!pairingId) return null;
+    return pairedGroups.find((group) => group.pairingId === pairingId) || null;
+  }
+
+  function supportsPairedCarousel() {
+    const canSnap = typeof CSS !== "undefined" && typeof CSS.supports === "function" && CSS.supports("scroll-snap-type: x mandatory");
+    const touchLikely =
+      (typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches) ||
+      "ontouchstart" in window;
+    return Boolean(canSnap && touchLikely);
+  }
+
+  function isCarouselModeActive(index = state.index) {
+    if (state.section3View !== "carousel") return false;
+    if (!supportsPairedCarousel()) return false;
+    return Boolean(getPairGroupByIndex(index));
   }
 
   function getInteractionModule(type) {
@@ -727,8 +833,57 @@
     transition: renderTransitionSlide
   };
 
+  function renderSection3PairedUnit(card, pairGroup) {
+    const excerptSlide = slides[pairGroup.excerptIndex];
+    const questionSlide = slides[pairGroup.questionIndex];
+    if (!excerptSlide || !questionSlide) return;
+
+    const wrap = document.createElement("section");
+    wrap.className = "paired-unit";
+
+    const excerptPanel = document.createElement("article");
+    excerptPanel.className = "md-elevated-card paired-panel";
+    const excerptTitle = document.createElement("h2");
+    excerptTitle.className = "paired-panel-title";
+    excerptTitle.textContent = excerptSlide.title;
+    excerptPanel.appendChild(excerptTitle);
+    appendStructuredText(excerptPanel, excerptSlide);
+
+    const questionPanel = document.createElement("article");
+    questionPanel.className = "md-elevated-card paired-panel";
+    const questionTitle = document.createElement("h2");
+    questionTitle.className = "paired-panel-title";
+    questionTitle.textContent = questionSlide.title;
+    questionPanel.appendChild(questionTitle);
+    renderSingleChoice(questionPanel, questionSlide);
+
+    wrap.append(excerptPanel, questionPanel);
+    card.appendChild(wrap);
+
+    let touchStartX = null;
+    card.addEventListener("touchstart", (event) => {
+      touchStartX = event.changedTouches?.[0]?.screenX ?? null;
+    }, { passive: true });
+    card.addEventListener("touchend", (event) => {
+      if (touchStartX === null) return;
+      const touchEndX = event.changedTouches?.[0]?.screenX ?? touchStartX;
+      const deltaX = touchEndX - touchStartX;
+      touchStartX = null;
+      if (Math.abs(deltaX) < 44) return;
+      if (deltaX < 0) jumpTo(getNextIndex());
+      if (deltaX > 0) jumpTo(getPrevIndex());
+    }, { passive: true });
+  }
+
+  function getValidationSlide() {
+    if (!isCarouselModeActive(state.index)) return slides[state.index];
+    const group = getPairGroupByIndex(state.index);
+    if (!group) return slides[state.index];
+    return slides[group.questionIndex];
+  }
+
   function validateCurrentSlide() {
-    const slide = slides[state.index];
+    const slide = getValidationSlide();
     const key = slide.responseKey;
     if (!key) return { valid: true };
     const interactionType = resolveInteractionType(slide);
@@ -761,6 +916,24 @@
     return { valid: true };
   }
 
+  function getNextIndex() {
+    if (!isCarouselModeActive(state.index)) return state.index + 1;
+    const currentGroup = getPairGroupByIndex(state.index);
+    if (!currentGroup) return state.index + 1;
+    const currentGroupIndex = pairedGroups.findIndex((group) => group.pairingId === currentGroup.pairingId);
+    const nextGroup = pairedGroups[currentGroupIndex + 1];
+    return nextGroup ? nextGroup.excerptIndex : Math.min(currentGroup.questionIndex + 1, slides.length - 1);
+  }
+
+  function getPrevIndex() {
+    if (!isCarouselModeActive(state.index)) return state.index - 1;
+    const currentGroup = getPairGroupByIndex(state.index);
+    if (!currentGroup) return state.index - 1;
+    const currentGroupIndex = pairedGroups.findIndex((group) => group.pairingId === currentGroup.pairingId);
+    const prevGroup = pairedGroups[currentGroupIndex - 1];
+    return prevGroup ? prevGroup.excerptIndex : Math.max(currentGroup.excerptIndex - 1, 0);
+  }
+
   function jumpTo(index) {
     state.index = Math.max(0, Math.min(index, slides.length - 1));
     persistState(state);
@@ -770,6 +943,8 @@
   function render() {
     const slide = slides[state.index];
     const interactionType = resolveInteractionType(slide);
+    const pairGroup = getPairGroupByIndex(state.index);
+    const carouselActive = isCarouselModeActive(state.index);
     const { sectionKey, sectionTheme } = getSectionMeta(slide.section);
     const previousSectionKey = el.container.dataset.currentSection || "";
     el.container.innerHTML = "";
@@ -792,7 +967,7 @@
 
     const title = document.createElement("h1");
     title.className = "slide-question";
-    title.textContent = slide.title;
+    title.textContent = carouselActive && pairGroup ? "Paired Excerpt Carousel" : slide.title;
 
     const feedback = document.createElement("div");
     feedback.id = "feedback-card";
@@ -803,13 +978,25 @@
     feedback.innerHTML = '<div class="feedback-title">Feedback</div><div class="feedback-body"></div>';
 
     card.append(badge, title);
-    const renderer = renderByInteractionType[interactionType] || renderTextSlide;
-    renderer(card, slide);
+
+    const phaseChip = createPhaseChip(slide.phaseTag || pairGroup?.phaseTag || "");
+    if (phaseChip) card.appendChild(phaseChip);
+    if (slide.section === SECTION3_LABEL && pairGroup) {
+      card.appendChild(createSegmentedControl(state.section3View));
+    }
+
+    if (carouselActive && pairGroup) {
+      renderSection3PairedUnit(card, pairGroup);
+    } else {
+      const renderer = renderByInteractionType[interactionType] || renderTextSlide;
+      renderer(card, slide);
+    }
     card.appendChild(feedback);
 
-    if (getResponse(slide.id, getSubmitKey(slide), false)) {
-      const seed = getResponse(slide.id, slide.responseKey, []);
-      renderFeedback(slide, Array.isArray(seed) ? seed : []);
+    const feedbackSlide = carouselActive && pairGroup ? slides[pairGroup.questionIndex] : slide;
+    if (getResponse(feedbackSlide.id, getSubmitKey(feedbackSlide), false)) {
+      const seed = getResponse(feedbackSlide.id, feedbackSlide.responseKey, []);
+      renderFeedback(feedbackSlide, Array.isArray(seed) ? seed : []);
     }
     if (interactionType === "yes-no-matrix") {
       const saved = getResponse(slide.id, slide.responseKey, {});
@@ -819,8 +1006,14 @@
     el.container.appendChild(card);
 
     el.section.textContent = slide.section;
-    el.slideId.textContent = `Slide ${slide.id}`;
-    el.counter.textContent = `Slide ${state.index + 1} of ${slides.length}`;
+    if (carouselActive && pairGroup) {
+      const pairIndex = pairedGroups.findIndex((group) => group.pairingId === pairGroup.pairingId);
+      el.slideId.textContent = `Pair ${pairIndex + 1}`;
+      el.counter.textContent = `Pair ${pairIndex + 1} of ${pairedGroups.length}`;
+    } else {
+      el.slideId.textContent = `Slide ${slide.id}`;
+      el.counter.textContent = `Slide ${state.index + 1} of ${slides.length}`;
+    }
     el.progress.style.width = `${((state.index + 1) / slides.length) * 100}%`;
 
     el.prev.disabled = state.index === 0;
@@ -839,7 +1032,7 @@
     }
   }
 
-  el.prev.addEventListener("click", () => jumpTo(state.index - 1));
+  el.prev.addEventListener("click", () => jumpTo(getPrevIndex()));
   el.next.addEventListener("click", () => {
     const validation = validateCurrentSlide();
     if (!validation.valid) {
@@ -857,7 +1050,7 @@
       return;
     }
 
-    jumpTo(state.index + 1);
+    jumpTo(getNextIndex());
   });
 
   window.deckHooks = {
