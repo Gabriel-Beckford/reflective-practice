@@ -178,6 +178,15 @@
     card.classList.remove("visible", "error");
   }
 
+  function setFeedback(title, body, isError = false) {
+    const card = document.getElementById("feedback-card");
+    if (!card) return;
+    card.querySelector(".feedback-title").textContent = title;
+    card.querySelector(".feedback-body").textContent = body;
+    card.classList.add("visible");
+    card.classList.toggle("error", Boolean(isError));
+  }
+
   function paintChoiceStates(wrap, slide, selection, submitted) {
     [...wrap.children].forEach((child, i) => {
       if (i === 0) return;
@@ -366,13 +375,37 @@
     target.appendChild(list);
   }
 
+  const interactionModules = window.DeckInteractionModules || {};
+
+  function getInteractionModule(type) {
+    return interactionModules[type] || null;
+  }
+
+  function createInteractionContext() {
+    return { saveResponse, getResponse, setFeedback, hideFeedback };
+  }
+
+  function renderPluggableInteraction(card, slide) {
+    const interactionType = resolveInteractionType(slide);
+    const module = getInteractionModule(interactionType);
+    if (!module || typeof module.render !== "function") return false;
+    module.render(card, slide, createInteractionContext());
+    return true;
+  }
+
   function resolveInteractionType(slide) {
     const legacyTypeMap = {
       content: "text",
       "single-choice": "single-choice",
       "multi-choice": "multi-select",
       "multi-yn": "yes-no-matrix",
-      input: "free-response"
+      input: "free-response",
+      matrix: "matrix",
+      "drag-drop": "drag-drop",
+      pelmanism: "pelmanism",
+      "table-completion": "table-completion",
+      "short-answer": "short-answer",
+      gapfill: "gapfill"
     };
 
     return legacyTypeMap[slide.type] || slide.type || "text";
@@ -446,10 +479,7 @@
     btn.addEventListener("click", () => {
       const selection = getResponse(slide.id, slide.responseKey, []);
       if (!selection.length) {
-        const card = document.getElementById("feedback-card");
-        card.classList.add("visible", "error");
-        card.querySelector(".feedback-title").textContent = "Hold on";
-        card.querySelector(".feedback-body").textContent = "Please select an option before submitting.";
+        setFeedback("Hold on", "Please select an option before submitting.", true);
         return;
       }
       saveResponse(slide.id, getSubmitKey(slide), true);
@@ -577,6 +607,12 @@
     "single-choice": renderSingleChoice,
     "multi-select": renderMultiSelect,
     "yes-no-matrix": renderYesNoMatrix,
+    matrix: (card, slide) => renderPluggableInteraction(card, slide) || renderYesNoMatrix(card, slide),
+    "drag-drop": (card, slide) => renderPluggableInteraction(card, slide) || renderTextSlide(card, slide),
+    pelmanism: (card, slide) => renderPluggableInteraction(card, slide) || renderTextSlide(card, slide),
+    "table-completion": (card, slide) => renderPluggableInteraction(card, slide) || renderTextSlide(card, slide),
+    "short-answer": (card, slide) => renderPluggableInteraction(card, slide) || renderFreeResponse(card, slide),
+    gapfill: (card, slide) => renderPluggableInteraction(card, slide) || renderTextSlide(card, slide),
     "free-response": renderFreeResponse,
     cta: renderCtaSlide,
     transition: renderTransitionSlide
@@ -587,6 +623,11 @@
     const key = slide.responseKey;
     if (!key) return { valid: true };
     const interactionType = resolveInteractionType(slide);
+    const module = getInteractionModule(interactionType);
+    if (module && typeof module.validate === "function") {
+      const moduleValidation = module.validate(slide, createInteractionContext());
+      if (moduleValidation && moduleValidation.valid === false) return moduleValidation;
+    }
 
     if (interactionType === "free-response") {
       const value = (getResponse(slide.id, key, "") || "").trim();
@@ -682,10 +723,7 @@
   el.next.addEventListener("click", () => {
     const validation = validateCurrentSlide();
     if (!validation.valid) {
-      const card = document.getElementById("feedback-card");
-      card.classList.add("visible", "error");
-      card.querySelector(".feedback-title").textContent = "Hold on";
-      card.querySelector(".feedback-body").textContent = validation.message;
+      setFeedback("Hold on", validation.message, true);
       return;
     }
 
