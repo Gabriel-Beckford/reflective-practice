@@ -15,6 +15,10 @@ window.DECK_DATA = {
       "matrix"
     ]
   },
+  mediaSchema: {
+    supportedTypes: ["image", "image-bordered", "icon", "icon-bordered"],
+    fields: ["type", "src", "alt", "caption", "credit"]
+  },
   slides: [
     {
       id: "1.1",
@@ -60,6 +64,12 @@ window.DECK_DATA = {
         "Experiential learning is best conceived as a process, not in terms of fixed outcomes.",
         "Learning is continuous and holistic: it involves your thoughts, feelings, and actions."
       ],
+      media: {
+        type: "icon",
+        src: "groups",
+        alt: "Classroom discussion icon.",
+        caption: "Learning deepens when experience is discussed, questioned, and revisited together.",
+      },
       callout: "Experiential learning and reflective practice co-exist.",
       actionPrompt: "As you progress, focus on how reflection turns experience into knowledge."
     },
@@ -89,11 +99,17 @@ window.DECK_DATA = {
       lead:
         "Kolb proposed four phases organised in a continuous cycle to make experiential learning practical.",
       keyPoints: [
-        "Diagram: Concrete Experience (CE) → Reflective Observation (RO) → Abstract Conceptualisation (AC) → Active Experimentation (AE) → back to CE.",
+        "Cycle flow: Concrete Experience (CE) → Reflective Observation (RO) → Abstract Conceptualisation (AC) → Active Experimentation (AE) → back to CE.",
         "The cycle maps two dimensions:",
         "Grasping experience: CE to AC.",
         "Transforming experience: RO to AE."
       ],
+      media: {
+        type: "icon-bordered",
+        src: "cycle",
+        alt: "Iterative learning cycle icon.",
+        caption: "Visual analogue for Kolb's iterative cycle: experience is captured, reflected on, conceptualised, and tested in action.",
+      },
       callouts: ["Each phase builds directly upon the previous one."],
       actionPrompt: "As you read the next slides, identify what changes from one phase to the next."
     },
@@ -126,6 +142,12 @@ window.DECK_DATA = {
       keyPoints: [
         "Stay fully involved: open, present, and engaged without preconceptions."
       ],
+      media: {
+        type: "icon",
+        src: "co_present",
+        alt: "Teacher leading a classroom activity icon.",
+        caption: "Concrete Experience starts in the live moment: what learners and teachers are actually doing.",
+      },
       questionSet: ["Typical questions: What happened? When did it happen? Who was involved? What did I do?"],
       examples: [
         "Contextual example: In a Port-au-Prince reading lesson, one group finishes early and chats in Kreyòl, one struggles with vocabulary, and one is deeply engaged."
@@ -226,6 +248,12 @@ window.DECK_DATA = {
         "Translate conceptual understanding into practical action.",
         "This stage feeds directly into a new Concrete Experience.",
       ],
+      media: {
+        type: "icon",
+        src: "experiment",
+        alt: "Classroom experimentation icon.",
+        caption: "Active Experimentation is visible in planned classroom moves that are trialled and observed.",
+      },
       questionSet: [
         "Typical questions: What will I do differently? How will I test it? What exact steps will I take?"
       ],

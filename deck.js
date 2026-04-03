@@ -418,6 +418,8 @@
       target.appendChild(leadHeader);
     }
 
+    appendSlideMedia(target, slide.media);
+
     if (keyPoints.length || slide.listTitle || slide.bullets?.length) {
       const keyPointsSection = document.createElement("section");
       keyPointsSection.className = "text-region text-region-key-points";
@@ -458,6 +460,50 @@
       appendBodyCopy(actionSection, [actionPrompt], "slide-action");
       target.appendChild(actionSection);
     }
+  }
+
+  function appendSlideMedia(target, media) {
+    if (!media || typeof media !== "object") return;
+    const isImage = media.type === "image" || media.type === "image-bordered";
+    const isIcon = media.type === "icon" || media.type === "icon-bordered";
+    if (!isImage && !isIcon) return;
+    if (!media.src) return;
+
+    const figure = document.createElement("figure");
+    figure.className = "slide-media";
+    if (media.type === "image-bordered" || media.type === "icon-bordered") figure.classList.add("slide-media--bordered");
+
+    if (isImage) {
+      const image = document.createElement("img");
+      image.className = "slide-media-image";
+      image.src = media.src;
+      image.alt = media.alt || "";
+      image.loading = "lazy";
+      image.decoding = "async";
+      figure.appendChild(image);
+    } else if (isIcon) {
+      const icon = document.createElement("span");
+      icon.className = "material-symbols-rounded slide-media-icon";
+      icon.textContent = media.src;
+      icon.setAttribute("role", "img");
+      icon.setAttribute("aria-label", media.alt || media.src);
+      figure.appendChild(icon);
+    }
+
+    if (media.caption || media.credit) {
+      const caption = document.createElement("figcaption");
+      caption.className = "slide-media-caption";
+      caption.textContent = media.caption || "";
+      if (media.credit) {
+        const credit = document.createElement("span");
+        credit.className = "slide-media-credit";
+        credit.textContent = ` ${media.credit}`;
+        caption.appendChild(credit);
+      }
+      figure.appendChild(caption);
+    }
+
+    target.appendChild(figure);
   }
 
   function createPhaseChip(phaseTag) {
