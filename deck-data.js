@@ -94,7 +94,7 @@ window.DECK_DATA = {
         "Grasping experience: CE to AC.",
         "Transforming experience: RO to AE."
       ],
-      callout: "Each phase builds directly upon the previous one.",
+      callouts: ["Each phase builds directly upon the previous one."],
       actionPrompt: "As you read the next slides, identify what changes from one phase to the next."
     },
     {
@@ -124,11 +124,12 @@ window.DECK_DATA = {
       title: "Concrete Experience (CE)",
       lead: "Concrete Experience (CE) starts with a specific event you lived through.",
       keyPoints: [
-        "Stay fully involved: open, present, and engaged without preconceptions.",
-        "Ask: What happened? When did it happen? Who was involved? What did I do?"
+        "Stay fully involved: open, present, and engaged without preconceptions."
       ],
-      callout:
-        "Contextual example: in a Port-au-Prince reading lesson, one group finishes early and chats in Kreyòl, one struggles with vocabulary, and one is deeply engaged.",
+      questionSet: ["Typical questions: What happened? When did it happen? Who was involved? What did I do?"],
+      examples: [
+        "Contextual example: In a Port-au-Prince reading lesson, one group finishes early and chats in Kreyòl, one struggles with vocabulary, and one is deeply engaged."
+      ],
       actionPrompt: "Capture only what happened first—interpretation comes later."
     },
     {
@@ -156,11 +157,12 @@ window.DECK_DATA = {
       title: "Reflective Observation (RO)",
       lead: "Reflective Observation (RO) is where you step back and examine the event from multiple perspectives.",
       keyPoints: [
-        "Focus on feelings, reactions, and outcomes.",
-        "Ask: How did I feel? What went well? What was surprising? What would a colleague have noticed?"
+        "Focus on feelings, reactions, and outcomes."
       ],
-      callout:
-        "Contextual example: you felt frustrated when one group switched to Kreyòl, but pleased by another group's engagement.",
+      questionSet: ["Typical questions: How did I feel? What went well? What was surprising? What would a colleague have noticed?"],
+      examples: [
+        "Contextual example: You felt frustrated when one group switched to Kreyòl, but pleased by another group's engagement."
+      ],
       actionPrompt: "Name at least one feeling and one observed pattern before moving to theory."
     },
     {
@@ -188,11 +190,12 @@ window.DECK_DATA = {
       title: "Abstract Conceptualisation (AC)",
       lead: "Abstract Conceptualisation (AC) moves from personal observation to broader analysis.",
       keyPoints: [
-        "Use theory, research, or general principles to make sense of what happened.",
-        "Ask: What does the literature say? What pattern is emerging? Which framework explains this?"
+        "Use theory, research, or general principles to make sense of what happened."
       ],
-      callout:
-        "Contextual example: Cummins' BICS/CALP and Vygotsky's ZPD help explain why one group struggled with academic literacy demands.",
+      questionSet: ["Typical questions: What does the literature say? What pattern is emerging? Which framework explains this?"],
+      examples: [
+        "Contextual example: Cummins' BICS/CALP and Vygotsky's ZPD help explain why one group struggled with academic literacy demands."
+      ],
       actionPrompt: "Connect your observation to at least one theory before planning next steps."
     },
     {
@@ -222,10 +225,13 @@ window.DECK_DATA = {
       keyPoints: [
         "Translate conceptual understanding into practical action.",
         "This stage feeds directly into a new Concrete Experience.",
-        "Ask: What will I do differently? How will I test it? What exact steps will I take?"
       ],
-      callout:
-        "Contextual example: differentiate the next reading task with glossary support for one group and extension tasks for early finishers.",
+      questionSet: [
+        "Typical questions: What will I do differently? How will I test it? What exact steps will I take?"
+      ],
+      examples: [
+        "Contextual example: Differentiate the next reading task with glossary support for one group and extension tasks for early finishers."
+      ],
       actionPrompt: "Choose one specific, observable change to trial in your next lesson."
     },
     {
@@ -480,13 +486,17 @@ window.DECK_DATA = {
       lead:
         "The AI asks an initial prompt and up to two dynamic follow-up questions for each phase.",
       keyPoints: [
-        "Phase 1 (CE) prompt: \"Let's begin with a Concrete Experience... what happened and who was involved?\"",
-        "Phase 2 (RO) transition: \"How did this moment make you feel, and what were students feeling?\"",
-        "Phase 3 (AC) transition: \"Can you connect this to frameworks, or explain why it happened more broadly?\"",
-        "Phase 4 (AE) transition: \"What specific step will you take differently next time?\""
+        "The dialogue flow covers CE, RO, AC, and AE in sequence."
       ],
-      callout:
+      examples: [
+        "Example: Phase 1 (CE) prompt — \"Let's begin with a Concrete Experience... what happened and who was involved?\"",
+        "Example: Phase 2 (RO) transition — \"How did this moment make you feel, and what were students feeling?\"",
+        "Example: Phase 3 (AC) transition — \"Can you connect this to frameworks, or explain why it happened more broadly?\"",
+        "Example: Phase 4 (AE) transition — \"What specific step will you take differently next time?\""
+      ],
+      callouts: [
         "After each user response, AI asks 1–2 contextual follow-ups to deepen detail rather than using a rigid script.",
+      ],
       actionPrompt: "Track how each follow-up clarifies evidence, interpretation, theory, and next action."
     },
     {

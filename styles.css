@@ -397,6 +397,13 @@ main {
   gap: 10px;
 }
 
+.label-line {
+  display: inline-block;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--md-primary) 75%, var(--md-on-surface));
+  margin-inline-end: 4px;
+}
+
 .text-region-lead {
   border-inline-start: 4px solid color-mix(in srgb, var(--md-primary) 55%, transparent);
   padding-inline-start: 14px;
@@ -418,10 +425,54 @@ main {
   padding: 12px 14px;
 }
 
+.text-region-callout::before {
+  content: "ℹ";
+  font-weight: 700;
+  color: color-mix(in srgb, var(--md-secondary) 75%, black);
+}
+
 .slide-callout {
   font-size: var(--callout-size);
   line-height: 1.65;
   font-weight: 500;
+}
+
+.text-region-questions,
+.text-region-examples {
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.text-region-questions {
+  background: color-mix(in srgb, var(--md-primary-container) 55%, var(--md-surface));
+  border: 1px solid color-mix(in srgb, var(--md-primary) 22%, var(--md-primary-container));
+}
+
+.text-region-examples {
+  background: color-mix(in srgb, var(--md-secondary-container) 45%, var(--md-surface));
+  border: 1px dashed color-mix(in srgb, var(--md-secondary) 40%, var(--md-secondary-container));
+}
+
+.question-set,
+.example-block {
+  position: relative;
+  padding-inline-start: 18px;
+}
+
+.question-set::before,
+.example-block::before {
+  position: absolute;
+  left: 0;
+  top: 0.1em;
+  font-weight: 700;
+}
+
+.question-set::before {
+  content: "❓";
+}
+
+.example-block::before {
+  content: "🧩";
 }
 
 .text-region-action {

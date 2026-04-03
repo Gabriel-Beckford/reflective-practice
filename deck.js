@@ -338,11 +338,39 @@
     card.classList.toggle("error", allAnswered && !allCorrect);
   }
 
+  const LINE_PATTERNS = [
+    { regex: /^typical questions:\s*/i, variantClass: "question-set", labelClass: "label-line" },
+    { regex: /^ask:\s*/i, variantClass: "question-set", labelClass: "label-line" },
+    { regex: /^contextual example:\s*/i, variantClass: "example-block", labelClass: "label-line" },
+    { regex: /^example:\s*/i, variantClass: "example-block", labelClass: "label-line" }
+  ];
+
+  function classifyLine(line) {
+    if (typeof line !== "string") return { text: "", variantClass: "", label: "" };
+    const trimmed = line.trim();
+    const hit = LINE_PATTERNS.find(({ regex }) => regex.test(trimmed));
+    if (!hit) return { text: line, variantClass: "", label: "" };
+
+    const labelMatch = trimmed.match(/^([^:]{3,40}:)\s*(.*)$/);
+    return {
+      text: labelMatch ? labelMatch[2] : trimmed,
+      variantClass: hit.variantClass,
+      label: labelMatch ? labelMatch[1] : ""
+    };
+  }
+
   function appendBodyCopy(target, lines = [], className = "slide-copy") {
     lines.forEach((line) => {
+      const { text, variantClass, label } = classifyLine(line);
       const p = document.createElement("p");
-      p.className = className;
-      p.textContent = line;
+      p.className = [className, variantClass].filter(Boolean).join(" ");
+      if (label) {
+        const labelSpan = document.createElement("span");
+        labelSpan.className = "label-line";
+        labelSpan.textContent = `${label} `;
+        p.appendChild(labelSpan);
+      }
+      p.append(document.createTextNode(text));
       target.appendChild(p);
     });
   }
@@ -355,10 +383,16 @@
 
   function getSlideTextRegions(slide) {
     const body = Array.isArray(slide.body) ? slide.body : [];
+    const keyPoints = Array.isArray(slide.keyPoints) ? slide.keyPoints : normalizeBodyToKeyPoints(body);
+    const questionSet =
+      Array.isArray(slide.questionSet) ? slide.questionSet : keyPoints.filter((point) => /^(ask|typical questions):/i.test(point));
+    const normalizedKeyPoints = keyPoints.filter((point) => !questionSet.includes(point));
     return {
       lead: slide.lead || body[0] || "",
-      keyPoints: Array.isArray(slide.keyPoints) ? slide.keyPoints : normalizeBodyToKeyPoints(body),
-      callout: slide.callout || "",
+      keyPoints: normalizedKeyPoints,
+      questionSet,
+      callouts: Array.isArray(slide.callouts) ? slide.callouts : slide.callout ? [slide.callout] : [],
+      examples: Array.isArray(slide.examples) ? slide.examples : [],
       actionPrompt: slide.actionPrompt || ""
     };
   }
@@ -372,7 +406,7 @@
       return;
     }
 
-    const { lead, keyPoints, callout, actionPrompt } = getSlideTextRegions(slide);
+    const { lead, keyPoints, questionSet, callouts, examples, actionPrompt } = getSlideTextRegions(slide);
 
     if (lead) {
       const leadHeader = document.createElement("header");
@@ -389,10 +423,24 @@
       target.appendChild(keyPointsSection);
     }
 
-    if (callout) {
+    if (questionSet.length) {
+      const questionSection = document.createElement("section");
+      questionSection.className = "text-region text-region-questions";
+      appendBodyCopy(questionSection, questionSet, "slide-copy question-set");
+      target.appendChild(questionSection);
+    }
+
+    if (examples.length) {
+      const exampleSection = document.createElement("section");
+      exampleSection.className = "text-region text-region-examples";
+      appendBodyCopy(exampleSection, examples, "slide-copy example-block");
+      target.appendChild(exampleSection);
+    }
+
+    if (callouts.length) {
       const calloutAside = document.createElement("aside");
       calloutAside.className = "text-region text-region-callout";
-      appendBodyCopy(calloutAside, [callout], "slide-callout");
+      appendBodyCopy(calloutAside, callouts, "slide-callout");
       target.appendChild(calloutAside);
     }
 
