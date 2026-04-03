@@ -338,7 +338,32 @@
     card.classList.toggle("error", allAnswered && !allCorrect);
   }
 
-  function appendBodyCopy(target, slide) {
+  function appendBodyCopy(target, lines = [], className = "slide-copy") {
+    lines.forEach((line) => {
+      const p = document.createElement("p");
+      p.className = className;
+      p.textContent = line;
+      target.appendChild(p);
+    });
+  }
+
+  function normalizeBodyToKeyPoints(lines = []) {
+    if (!Array.isArray(lines) || !lines.length) return [];
+    if (lines.length === 1) return [];
+    return lines.slice(1);
+  }
+
+  function getSlideTextRegions(slide) {
+    const body = Array.isArray(slide.body) ? slide.body : [];
+    return {
+      lead: slide.lead || body[0] || "",
+      keyPoints: Array.isArray(slide.keyPoints) ? slide.keyPoints : normalizeBodyToKeyPoints(body),
+      callout: slide.callout || "",
+      actionPrompt: slide.actionPrompt || ""
+    };
+  }
+
+  function appendStructuredText(target, slide) {
     if (slide.fixedTextBlock) {
       const block = document.createElement("pre");
       block.className = "fixed-text-block";
@@ -347,12 +372,36 @@
       return;
     }
 
-    (slide.body || []).forEach((line) => {
-      const p = document.createElement("p");
-      p.className = "slide-copy";
-      p.textContent = line;
-      target.appendChild(p);
-    });
+    const { lead, keyPoints, callout, actionPrompt } = getSlideTextRegions(slide);
+
+    if (lead) {
+      const leadHeader = document.createElement("header");
+      leadHeader.className = "text-region text-region-lead";
+      appendBodyCopy(leadHeader, [lead], "slide-lead");
+      target.appendChild(leadHeader);
+    }
+
+    if (keyPoints.length || slide.listTitle || slide.bullets?.length) {
+      const keyPointsSection = document.createElement("section");
+      keyPointsSection.className = "text-region text-region-key-points";
+      appendBodyCopy(keyPointsSection, keyPoints);
+      appendOptionalList(keyPointsSection, slide);
+      target.appendChild(keyPointsSection);
+    }
+
+    if (callout) {
+      const calloutAside = document.createElement("aside");
+      calloutAside.className = "text-region text-region-callout";
+      appendBodyCopy(calloutAside, [callout], "slide-callout");
+      target.appendChild(calloutAside);
+    }
+
+    if (actionPrompt) {
+      const actionSection = document.createElement("section");
+      actionSection.className = "text-region text-region-action";
+      appendBodyCopy(actionSection, [actionPrompt], "slide-action");
+      target.appendChild(actionSection);
+    }
   }
 
   function appendOptionalList(target, slide) {
@@ -414,8 +463,7 @@
   function renderTextSlide(card, slide) {
     const wrap = document.createElement("section");
     wrap.className = "text-renderer";
-    appendBodyCopy(wrap, slide);
-    appendOptionalList(wrap, slide);
+    appendStructuredText(wrap, slide);
 
     if (slide.id === "6.1") {
       const exportBtn = document.createElement("button");
@@ -505,7 +553,7 @@
   function renderFreeResponse(card, slide) {
     const wrap = document.createElement("section");
     wrap.className = "free-response-renderer";
-    appendBodyCopy(wrap, slide);
+    appendStructuredText(wrap, slide);
 
     const inputWrap = document.createElement("div");
     inputWrap.className = "input-wrap";
@@ -555,7 +603,7 @@
   function renderCtaSlide(card, slide) {
     const wrap = document.createElement("section");
     wrap.className = "cta-renderer";
-    appendBodyCopy(wrap, slide);
+    appendStructuredText(wrap, slide);
 
     const actions = slide.actions || [];
     if (actions.length) {
@@ -580,7 +628,7 @@
   function renderTransitionSlide(card, slide) {
     const wrap = document.createElement("section");
     wrap.className = "transition-renderer";
-    appendBodyCopy(wrap, slide);
+    appendStructuredText(wrap, slide);
 
     if (slide.ctaLabel) {
       const ctaBtn = document.createElement("a");
