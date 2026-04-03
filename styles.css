@@ -226,10 +226,16 @@ main {
    SLIDE CARD — Uniform border, no asymmetric top-border
    ========================================================================== */
 .slide {
+  --section-accent: var(--md-primary);
+  --section-accent-container: var(--md-primary-container);
+  --section-on-accent-container: var(--md-on-primary-container);
+  --section-tint-soft: color-mix(in srgb, var(--section-accent-container) 24%, var(--md-surface));
+  --section-tint-muted: color-mix(in srgb, var(--section-accent-container) 18%, var(--md-surface));
   width: 100%;
-  background: linear-gradient(180deg, var(--md-surface-bright) 0%, var(--md-surface) 100%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--md-surface-bright) 82%, var(--section-accent-container)) 0%, var(--md-surface) 100%);
   border-radius: var(--radius-lg);
   border: 1px solid var(--md-outline-variant);
+  border-inline-start: 4px solid var(--section-accent);
   padding: 36px 34px;
   display: flex;
   flex-direction: column;
@@ -237,6 +243,10 @@ main {
   opacity: 0;
   transform: translateY(16px);
   animation: slideUp var(--dur-long) var(--ease) forwards;
+  transition:
+    background var(--dur-med) var(--ease),
+    border-color var(--dur-med) var(--ease),
+    box-shadow var(--dur-med) var(--ease);
 }
 
 .slide.active {
@@ -259,8 +269,8 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--md-tertiary-container);
-  color: var(--md-on-tertiary-container);
+  background: var(--section-accent-container);
+  color: var(--section-on-accent-container);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -268,6 +278,8 @@ main {
   padding: 8px 16px;
   border-radius: var(--radius-sm);
   align-self: flex-start;
+  border: 1px solid color-mix(in srgb, var(--section-accent) 28%, var(--section-accent-container));
+  transition: background var(--dur-med) var(--ease), color var(--dur-med) var(--ease), border-color var(--dur-med) var(--ease);
 }
 
 .slide-badge svg {
@@ -444,13 +456,13 @@ main {
 }
 
 .text-region-questions {
-  background: color-mix(in srgb, var(--md-primary-container) 55%, var(--md-surface));
-  border: 1px solid color-mix(in srgb, var(--md-primary) 22%, var(--md-primary-container));
+  background: var(--section-tint-soft);
+  border: 1px solid color-mix(in srgb, var(--section-accent) 22%, var(--section-accent-container));
 }
 
 .text-region-examples {
-  background: color-mix(in srgb, var(--md-secondary-container) 45%, var(--md-surface));
-  border: 1px dashed color-mix(in srgb, var(--md-secondary) 40%, var(--md-secondary-container));
+  background: var(--section-tint-muted);
+  border: 1px dashed color-mix(in srgb, var(--section-accent) 36%, var(--section-accent-container));
 }
 
 .question-set,
@@ -465,6 +477,16 @@ main {
   left: 0;
   top: 0.1em;
   font-weight: 700;
+  color: var(--section-on-accent-container);
+  background: var(--section-accent-container);
+  border: 1px solid color-mix(in srgb, var(--section-accent) 28%, var(--section-accent-container));
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  line-height: 1;
 }
 
 .question-set::before {
@@ -476,9 +498,9 @@ main {
 }
 
 .text-region-action {
-  background: var(--md-tertiary-container);
-  color: var(--md-on-tertiary-container);
-  border: 1px solid color-mix(in srgb, var(--md-tertiary) 26%, var(--md-tertiary-container));
+  background: color-mix(in srgb, var(--section-accent-container) 65%, var(--md-surface));
+  color: var(--section-on-accent-container);
+  border: 1px solid color-mix(in srgb, var(--section-accent) 26%, var(--section-accent-container));
   border-radius: var(--radius-md);
   padding: 12px 14px;
 }
@@ -502,15 +524,71 @@ main {
 }
 
 .icon-chip {
-  color: var(--md-primary);
-  background: var(--md-primary-container);
-  border: 1px solid color-mix(in srgb, var(--md-primary) 20%, var(--md-primary-container));
+  color: var(--section-on-accent-container);
+  background: var(--section-accent-container);
+  border: 1px solid color-mix(in srgb, var(--section-accent) 20%, var(--section-accent-container));
   border-radius: 999px;
   width: 48px;
   height: 48px;
   display: grid;
   place-items: center;
   font-size: 28px;
+}
+
+.slide[data-theme="dawn"] {
+  --section-accent: var(--md-primary);
+  --section-accent-container: color-mix(in srgb, var(--md-primary-container) 88%, #ffffff);
+  --section-on-accent-container: var(--md-on-primary-container);
+}
+
+.slide[data-theme="sage"] {
+  --section-accent: var(--md-secondary);
+  --section-accent-container: color-mix(in srgb, var(--md-secondary-container) 84%, #ffffff);
+  --section-on-accent-container: var(--md-on-secondary-container);
+}
+
+.slide[data-theme="amber"] {
+  --section-accent: var(--md-tertiary);
+  --section-accent-container: color-mix(in srgb, var(--md-tertiary-container) 82%, #ffffff);
+  --section-on-accent-container: var(--md-on-tertiary-container);
+}
+
+.slide[data-theme="violet"] {
+  --section-accent: color-mix(in srgb, var(--md-primary) 70%, var(--md-tertiary));
+  --section-accent-container: color-mix(in srgb, var(--md-primary-container) 70%, var(--md-tertiary-container));
+  --section-on-accent-container: var(--md-on-primary-container);
+}
+
+#slide-container[data-section-transition] .slide.section-enter {
+  animation: slideUp var(--dur-long) var(--ease) forwards, sectionShift var(--dur-med) var(--ease);
+}
+
+#slide-container[data-section-transition="section-1-to-section-2"] .slide.section-enter,
+#slide-container[data-section-transition="section-2-to-section-3"] .slide.section-enter,
+#slide-container[data-section-transition="section-3-to-section-4"] .slide.section-enter {
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--section-accent) 28%, transparent);
+  animation: slideUp var(--dur-long) var(--ease) forwards, sectionPulse 640ms var(--ease);
+}
+
+@keyframes sectionShift {
+  from {
+    filter: saturate(0.92);
+  }
+  to {
+    filter: saturate(1);
+  }
+}
+
+@keyframes sectionPulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--section-accent) 30%, transparent);
+  }
+  65% {
+    box-shadow: 0 0 0 14px color-mix(in srgb, var(--section-accent) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--section-accent) 0%, transparent);
+  }
 }
 
 .goals-pyramid {
