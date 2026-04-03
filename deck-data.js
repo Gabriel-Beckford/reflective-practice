@@ -1,5 +1,20 @@
 window.DECK_DATA = {
   title: "Content Storyboard: Kolb's Reflective Cycle",
+  interactionSchema: {
+    supportedTypes: [
+      "content",
+      "single-choice",
+      "multi-choice",
+      "multi-yn",
+      "input",
+      "drag-drop",
+      "pelmanism",
+      "table-completion",
+      "short-answer",
+      "gapfill",
+      "matrix"
+    ]
+  },
   slides: [
     {
       id: "1.1",
