@@ -241,8 +241,7 @@ main {
   flex-direction: column;
   gap: 24px;
   opacity: 0;
-  transform: translateY(16px);
-  animation: slideUp var(--dur-long) var(--ease) forwards;
+  animation: slideUp var(--dur-short) var(--ease) forwards;
   transition:
     background var(--dur-med) var(--ease),
     border-color var(--dur-med) var(--ease),
@@ -251,13 +250,14 @@ main {
 
 .slide.active {
   opacity: 1;
-  transform: translateY(0);
 }
 
 @keyframes slideUp {
+  from {
+    opacity: 0;
+  }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -619,14 +619,14 @@ main {
 }
 
 #slide-container[data-section-transition] .slide.section-enter {
-  animation: slideUp var(--dur-long) var(--ease) forwards, sectionShift var(--dur-med) var(--ease);
+  animation: slideUp var(--dur-short) var(--ease) forwards, sectionShift var(--dur-med) var(--ease);
 }
 
 #slide-container[data-section-transition="section-1-to-section-2"] .slide.section-enter,
 #slide-container[data-section-transition="section-2-to-section-3"] .slide.section-enter,
 #slide-container[data-section-transition="section-3-to-section-4"] .slide.section-enter {
   box-shadow: 0 0 0 0 color-mix(in srgb, var(--section-accent) 28%, transparent);
-  animation: slideUp var(--dur-long) var(--ease) forwards, sectionPulse 640ms var(--ease);
+  animation: slideUp var(--dur-short) var(--ease) forwards, sectionPulse 640ms var(--ease);
 }
 
 @keyframes sectionShift {
@@ -822,7 +822,7 @@ main {
   max-width: 88%;
   font-size: 1rem;
   line-height: 1.5;
-  animation: popIn 400ms var(--ease) both;
+  animation: popIn var(--dur-short) var(--ease) both;
 }
 
 .chat-ai {
@@ -950,38 +950,44 @@ textarea:focus-visible {
 @keyframes fadeSlideUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
 @keyframes popIn {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
 .reveal-step {
   opacity: 0;
-  transform: translateY(20px);
 }
 
 .reveal-step.revealed {
-  animation: fadeSlideUp 500ms var(--ease) forwards;
+  animation: fadeSlideUp var(--dur-short) var(--ease) forwards;
 }
 
 .delay-1 { animation-delay: 100ms; }
 .delay-2 { animation-delay: 200ms; }
 .delay-3 { animation-delay: 300ms; }
 .delay-4 { animation-delay: 400ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 
 /* ==========================================================================
