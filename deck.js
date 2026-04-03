@@ -473,6 +473,19 @@
   }
 
   const interactionModules = window.DeckInteractionModules || {};
+  const SECTION_THEMES = ["dawn", "sage", "amber", "violet"];
+
+  function getSectionMeta(sectionLabel = "") {
+    const normalizedLabel = String(sectionLabel || "").trim();
+    const sectionMatch = normalizedLabel.match(/section\s*(\d+)/i);
+    const sectionNumber = sectionMatch ? Number.parseInt(sectionMatch[1], 10) : null;
+    const sectionKey = Number.isInteger(sectionNumber) ? `section-${sectionNumber}` : "section-generic";
+    const sectionTheme = Number.isInteger(sectionNumber)
+      ? SECTION_THEMES[(sectionNumber - 1) % SECTION_THEMES.length]
+      : SECTION_THEMES[0];
+
+    return { sectionKey, sectionTheme };
+  }
 
   function getInteractionModule(type) {
     return interactionModules[type] || null;
@@ -757,10 +770,21 @@
   function render() {
     const slide = slides[state.index];
     const interactionType = resolveInteractionType(slide);
+    const { sectionKey, sectionTheme } = getSectionMeta(slide.section);
+    const previousSectionKey = el.container.dataset.currentSection || "";
     el.container.innerHTML = "";
 
     const card = document.createElement("article");
     card.className = "slide active";
+    card.dataset.section = sectionKey;
+    card.dataset.theme = sectionTheme;
+    if (previousSectionKey && previousSectionKey !== sectionKey) {
+      card.classList.add("section-enter");
+      el.container.dataset.sectionTransition = `${previousSectionKey}-to-${sectionKey}`;
+    } else {
+      delete el.container.dataset.sectionTransition;
+    }
+    el.container.dataset.currentSection = sectionKey;
 
     const badge = document.createElement("div");
     badge.className = "slide-badge";
