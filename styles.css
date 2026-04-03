@@ -288,6 +288,55 @@ main {
   flex-shrink: 0;
 }
 
+.md-chip {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--section-accent) 36%, var(--md-outline-variant));
+  background: color-mix(in srgb, var(--section-accent-container) 72%, var(--md-surface));
+  color: var(--section-on-accent-container);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 6px 12px;
+}
+
+.md-elevated-card {
+  background: linear-gradient(180deg, var(--md-surface-bright) 0%, var(--md-surface) 100%);
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--section-accent-container) 28%, var(--md-outline-variant));
+  box-shadow:
+    0 1px 2px rgba(28, 27, 31, 0.12),
+    0 8px 24px rgba(28, 27, 31, 0.08);
+  padding: 16px;
+}
+
+.md-segmented-control {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--md-outline-variant);
+  border-radius: 999px;
+  background: var(--md-surface-container);
+  overflow: hidden;
+}
+
+.md-segment {
+  border: 0;
+  background: transparent;
+  color: var(--md-on-surface-variant);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.md-segment.active {
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+}
+
 
 /* ==========================================================================
    SLIDE QUESTION TYPOGRAPHY
@@ -299,6 +348,16 @@ main {
   line-height: 1.35;
   color: var(--md-on-surface);
   max-width: 28ch;
+}
+
+.paired-unit {
+  display: grid;
+  gap: 14px;
+}
+
+.paired-panel-title {
+  font-size: 1rem;
+  margin-bottom: 10px;
 }
 
 .slide-question strong {
