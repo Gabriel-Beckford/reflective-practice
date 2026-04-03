@@ -38,6 +38,14 @@
   --dur-short: 200ms;
   --dur-med: 350ms;
   --dur-long: 500ms;
+
+  --region-gap: 16px;
+  --lead-size: clamp(1.22rem, 1.04rem + 0.7vw, 1.55rem);
+  --lead-line-height: 1.6;
+  --key-point-size: clamp(1rem, 0.94rem + 0.28vw, 1.125rem);
+  --key-point-line-height: 1.72;
+  --callout-size: clamp(0.98rem, 0.9rem + 0.25vw, 1.08rem);
+  --action-size: clamp(1.03rem, 0.93rem + 0.32vw, 1.18rem);
 }
 
 
@@ -371,9 +379,63 @@ main {
 }
 
 .slide-copy {
-  font-size: clamp(1rem, 0.94rem + 0.28vw, 1.125rem);
-  line-height: 1.72;
+  font-size: var(--key-point-size);
+  line-height: var(--key-point-line-height);
   max-width: 64ch;
+}
+
+.text-renderer,
+.free-response-renderer,
+.cta-renderer,
+.transition-renderer {
+  display: grid;
+  gap: var(--region-gap);
+}
+
+.text-region {
+  display: grid;
+  gap: 10px;
+}
+
+.text-region-lead {
+  border-inline-start: 4px solid color-mix(in srgb, var(--md-primary) 55%, transparent);
+  padding-inline-start: 14px;
+}
+
+.slide-lead {
+  font-size: var(--lead-size);
+  line-height: var(--lead-line-height);
+  font-weight: 600;
+  color: var(--md-on-surface);
+  max-width: 58ch;
+}
+
+.text-region-callout {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  border: 1px solid color-mix(in srgb, var(--md-secondary) 25%, var(--md-secondary-container));
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.slide-callout {
+  font-size: var(--callout-size);
+  line-height: 1.65;
+  font-weight: 500;
+}
+
+.text-region-action {
+  background: var(--md-tertiary-container);
+  color: var(--md-on-tertiary-container);
+  border: 1px solid color-mix(in srgb, var(--md-tertiary) 26%, var(--md-tertiary-container));
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.slide-action {
+  font-size: var(--action-size);
+  line-height: 1.58;
+  font-weight: 700;
 }
 
 .fixed-text-block {

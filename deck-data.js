@@ -54,11 +54,14 @@ window.DECK_DATA = {
       type: "content",
       badge: "Slide 2.1",
       title: "Why Experiential Learning?",
-      body: [
-        "David Kolb argued that knowledge is created through the transformation of experience. Experiential learning is best conceived as a process, not in terms of fixed outcomes.",
-        "Learning is a continuous, holistic process grounded in experience. It involves the whole person—your thoughts, your feelings, and your actions.",
-        "Crucially, experiential learning and reflective practice co-exist. You cannot transform an experience into knowledge without intentionally reflecting upon it."
-      ]
+      lead:
+        "David Kolb argued that knowledge is created through the transformation of experience.",
+      keyPoints: [
+        "Experiential learning is best conceived as a process, not in terms of fixed outcomes.",
+        "Learning is continuous and holistic: it involves your thoughts, feelings, and actions."
+      ],
+      callout: "Experiential learning and reflective practice co-exist.",
+      actionPrompt: "As you progress, focus on how reflection turns experience into knowledge."
     },
     {
       id: "2.2",
@@ -83,14 +86,16 @@ window.DECK_DATA = {
       type: "content",
       badge: "Slide 2.3",
       title: "Kolb's Four-Stage Cycle: Overview",
-      body: [
-        "To make this process practical, Kolb proposed that effective learning moves through four phases, organised in a continuous cycle.",
-        "Diagram Content: A continuous circular flow showing Concrete Experience (CE) → Reflective Observation (RO) → Abstract Conceptualisation (AC) → Active Experimentation (AE) → returning back to Concrete Experience (CE).",
+      lead:
+        "Kolb proposed four phases organised in a continuous cycle to make experiential learning practical.",
+      keyPoints: [
+        "Diagram: Concrete Experience (CE) → Reflective Observation (RO) → Abstract Conceptualisation (AC) → Active Experimentation (AE) → back to CE.",
         "The cycle maps two dimensions:",
-        "Grasping an experience: from concrete experience (CE) to abstract conceptualisation (AC).",
-        "Transforming an experience: from reflective observation (RO) to active experimentation (AE).",
-        "Each phase builds directly upon the previous one. Let's look at them individually."
-      ]
+        "Grasping experience: CE to AC.",
+        "Transforming experience: RO to AE."
+      ],
+      callout: "Each phase builds directly upon the previous one.",
+      actionPrompt: "As you read the next slides, identify what changes from one phase to the next."
     },
     {
       id: "2.4",
@@ -117,12 +122,14 @@ window.DECK_DATA = {
       type: "content",
       badge: "Slide 2.5",
       title: "Concrete Experience (CE)",
-      body: [
-        "Concrete Experience (CE) is the starting point: a specific event or situation you have lived through.",
-        "The key is full involvement — being open, present, and willing to engage without preconceptions.",
-        "Typical questions at this stage: What happened? When did it happen? Who was involved? What did you do?",
-        "Contextual Example: You're teaching a reading comprehension lesson in Port-au-Prince. You use group work for the first time. One group finishes early and chats in Kreyòl; another struggles with vocabulary; a third group is deeply engaged."
-      ]
+      lead: "Concrete Experience (CE) starts with a specific event you lived through.",
+      keyPoints: [
+        "Stay fully involved: open, present, and engaged without preconceptions.",
+        "Ask: What happened? When did it happen? Who was involved? What did I do?"
+      ],
+      callout:
+        "Contextual example: in a Port-au-Prince reading lesson, one group finishes early and chats in Kreyòl, one struggles with vocabulary, and one is deeply engaged.",
+      actionPrompt: "Capture only what happened first—interpretation comes later."
     },
     {
       id: "2.6",
@@ -147,12 +154,14 @@ window.DECK_DATA = {
       type: "content",
       badge: "Slide 2.7",
       title: "Reflective Observation (RO)",
-      body: [
-        "Reflective Observation (RO) is where you step back to examine the experience from multiple perspectives.",
-        "You pay attention to feelings, reactions, and outcomes.",
-        "Typical questions: How did I feel? What went well? What was surprising? What would a colleague observing my class have noticed?",
-        "Contextual Example: After the reading lesson, you notice you felt frustrated when the first group switched to Kreyòl. You also recall feeling pleased that the third group was so engaged. You wonder what your head of department would have observed."
-      ]
+      lead: "Reflective Observation (RO) is where you step back and examine the event from multiple perspectives.",
+      keyPoints: [
+        "Focus on feelings, reactions, and outcomes.",
+        "Ask: How did I feel? What went well? What was surprising? What would a colleague have noticed?"
+      ],
+      callout:
+        "Contextual example: you felt frustrated when one group switched to Kreyòl, but pleased by another group's engagement.",
+      actionPrompt: "Name at least one feeling and one observed pattern before moving to theory."
     },
     {
       id: "2.8",
@@ -177,12 +186,14 @@ window.DECK_DATA = {
       type: "content",
       badge: "Slide 2.9",
       title: "Abstract Conceptualisation (AC)",
-      body: [
-        "Abstract Conceptualisation (AC) is where you move from personal observation to broader analysis.",
-        "You draw on theory, research, or general principles to make sense of the experience.",
-        "Typical questions: What does the literature say? Can I identify a pattern? What framework helps explain what happened?",
-        "Contextual Example: You read about Cummins' (1979) distinction between BICS and CALP and realise the struggling group may lack the academic literacy to decode the text independently. You also consider Vygotsky's ZPD."
-      ]
+      lead: "Abstract Conceptualisation (AC) moves from personal observation to broader analysis.",
+      keyPoints: [
+        "Use theory, research, or general principles to make sense of what happened.",
+        "Ask: What does the literature say? What pattern is emerging? Which framework explains this?"
+      ],
+      callout:
+        "Contextual example: Cummins' BICS/CALP and Vygotsky's ZPD help explain why one group struggled with academic literacy demands.",
+      actionPrompt: "Connect your observation to at least one theory before planning next steps."
     },
     {
       id: "2.10",
@@ -207,13 +218,15 @@ window.DECK_DATA = {
       type: "content",
       badge: "Slide 2.11",
       title: "Active Experimentation (AE)",
-      body: [
-        "Active Experimentation (AE) is where you plan and test new approaches based on your insights.",
-        "You translate your conceptual understanding into practical action.",
-        "This stage feeds directly back into a new Concrete Experience, continuing the cycle.",
-        "Typical questions: What will I do differently? How will I test this idea? What specific steps will I take?",
-        "Contextual Example: You plan a differentiated version of the reading task: a simplified text with glossary support for the struggling group, and an extension task for the group that finished early."
-      ]
+      lead: "Active Experimentation (AE) is where you plan and test new approaches.",
+      keyPoints: [
+        "Translate conceptual understanding into practical action.",
+        "This stage feeds directly into a new Concrete Experience.",
+        "Ask: What will I do differently? How will I test it? What exact steps will I take?"
+      ],
+      callout:
+        "Contextual example: differentiate the next reading task with glossary support for one group and extension tasks for early finishers.",
+      actionPrompt: "Choose one specific, observable change to trial in your next lesson."
     },
     {
       id: "2.12",
@@ -238,15 +251,16 @@ window.DECK_DATA = {
       type: "content",
       badge: "Slide 2.13",
       title: "Chaining Micro-Reflections",
-      body: [
-        "Deep reflection takes time. But in busy teaching contexts, a micro-reflection—a brief, focused pass through the cycle taking just a few minutes—is incredibly powerful.",
-        "The key insight is chaining. When you chain multiple micro-reflections together over a week or a term, broader patterns of learning emerge that are invisible in a single cycle.",
-        "Example Progression:",
-        "Cycle 1 (Monday): Group work failed. I felt overwhelmed. Theory suggests they lacked scaffolding. Next class, I'll assign explicit roles.",
-        "Cycle 2 (Wednesday): Tried explicit roles. Better engagement, but one student dominated. I realized I need to teach turn-taking. Next time, I'll use a 'talking token'.",
-        "Cycle 3 (Friday): Used talking tokens. Quieter students finally spoke. It felt much more equitable. Vygotsky's peer scaffolding was evident. Next, I'll test this in a different subject.",
-        "On the next slide, you'll analyse what learning transpired across this specific progression."
-      ]
+      lead:
+        "Micro-reflections are brief passes through Kolb's cycle that remain powerful in busy teaching contexts.",
+      keyPoints: [
+        "Chaining multiple micro-reflections across a week or term reveals learning patterns hidden in a single cycle.",
+        "Cycle 1 (Monday): Group work failed; I felt overwhelmed; theory suggested weak scaffolding; next step was explicit roles.",
+        "Cycle 2 (Wednesday): Explicit roles improved engagement, but one learner dominated; next step was teaching turn-taking with a talking token.",
+        "Cycle 3 (Friday): Talking tokens increased quieter students' participation; peer scaffolding was evident; next step was testing in another subject."
+      ],
+      callout: "Pattern-based growth appears when reflection is repeated, not one-off.",
+      actionPrompt: "On the next slide, identify what professional learning shifted across these three cycles."
     },
     {
       id: "2.14",
@@ -454,10 +468,8 @@ window.DECK_DATA = {
       type: "content",
       badge: "Screen 1",
       title: "Welcome",
-      body: [
-        "Heading: Micro-Reflection",
-        "Action: Learner selects 'Type' or 'Speak', then clicks 'Begin'."
-      ]
+      lead: "Heading: Micro-Reflection",
+      actionPrompt: "Learner selects 'Type' or 'Speak', then clicks 'Begin'."
     },
     {
       id: "5.2",
@@ -465,21 +477,17 @@ window.DECK_DATA = {
       type: "content",
       badge: "Screen 2",
       title: "Phase Dialogue (Dynamic Progressive AI)",
-      body: [
-        "Note: AI does not ask linear blocks of questions. It asks an initial prompt, then up to 2 dynamic follow-up questions to tease out details based specifically on what the user said.",
-        "Phase 1 - Concrete Experience (CE):",
-        "AI Initial Prompt: \"Let's begin with a Concrete Experience. Think of a recent teaching event. Briefly, what happened and who was involved?\"",
-        "[User responds. AI asks 1-2 dynamic follow-ups based on the response. e.g., \"You mentioned the students were confused. What specific task were they trying to do when that confusion started?\"]",
-        "Phase 2 - Reflective Observation (RO):",
-        "AI Transition: \"Thank you, that gives a clear picture. Let's move to Reflective Observation. How did this specific moment make you feel, and what do you think the students were feeling?\"",
-        "[User responds. AI asks 1-2 dynamic follow-ups based on the response.]",
-        "Phase 3 - Abstract Conceptualisation (AC):",
-        "AI Transition: \"[Validates reflection]. Now for Abstract Conceptualisation. Can you connect this to any teaching frameworks, or why do you think this happened on a broader level?\"",
-        "[User responds. AI asks 1-2 dynamic follow-ups based on the response.]",
-        "Phase 4 - Active Experimentation (AE):",
-        "AI Transition: \"Finally, let's look at Active Experimentation. Based on these insights, what specific step will you take differently next time?\"",
-        "[User responds. AI asks 1-2 dynamic follow-ups based on the response.]"
-      ]
+      lead:
+        "The AI asks an initial prompt and up to two dynamic follow-up questions for each phase.",
+      keyPoints: [
+        "Phase 1 (CE) prompt: \"Let's begin with a Concrete Experience... what happened and who was involved?\"",
+        "Phase 2 (RO) transition: \"How did this moment make you feel, and what were students feeling?\"",
+        "Phase 3 (AC) transition: \"Can you connect this to frameworks, or explain why it happened more broadly?\"",
+        "Phase 4 (AE) transition: \"What specific step will you take differently next time?\""
+      ],
+      callout:
+        "After each user response, AI asks 1–2 contextual follow-ups to deepen detail rather than using a rigid script.",
+      actionPrompt: "Track how each follow-up clarifies evidence, interpretation, theory, and next action."
     },
     {
       id: "5.3",
@@ -487,12 +495,12 @@ window.DECK_DATA = {
       type: "content",
       badge: "Screen 3",
       title: "Summary & Export",
-      body: [
-        "Content: Display summaries of the learner's responses mapped to CE, RO, AC, and AE.",
-        "Action: Learner can opt-in to share excerpts with peers.",
-        "Action: Download PDF.",
-        "Action: Return to the slide deck."
-      ]
+      lead: "Display learner summaries mapped to CE, RO, AC, and AE.",
+      keyPoints: [
+        "Learner can opt in to share excerpts with peers.",
+        "Learner can download a PDF export."
+      ],
+      actionPrompt: "After export, return to the slide deck to complete the module."
     },
     {
       id: "6.1",
