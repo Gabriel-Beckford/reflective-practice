@@ -898,6 +898,57 @@
     return interactionModules[type] || null;
   }
 
+  class DeckAiError extends Error {
+    constructor(code, message, details = {}) {
+      super(message);
+      this.name = "DeckAiError";
+      this.code = code || "ai_error";
+      this.details = details;
+    }
+  }
+
+  function resolveDeckAiPhaseKey(slide = slides[state.index]) {
+    const rawPhase = String(slide?.phaseTag || "").toUpperCase();
+    if (["CE", "RO", "AC", "AE"].includes(rawPhase)) return rawPhase;
+    return "RO";
+  }
+
+  function mapDeckAiError(error, fallbackMessage) {
+    if (error instanceof DeckAiError) return error;
+    if (error?.name === "AbortError") {
+      return new DeckAiError("timeout", "Gemini request timed out.");
+    }
+    return new DeckAiError("network", fallbackMessage || "Unable to reach Gemini right now.", {
+      cause: error instanceof Error ? error.message : String(error || "")
+    });
+  }
+
+  async function requestDeckAi({ transcript, mode = "deck", phaseKey, turnCount = 1, sessionToken }) {
+    try {
+      const response = await fetch("/api/gemini/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phaseKey: phaseKey || resolveDeckAiPhaseKey(),
+          turnCount,
+          transcript: Array.isArray(transcript) ? transcript : [],
+          mode,
+          sessionToken: sessionToken || null
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new DeckAiError(payload?.code || "upstream_error", payload?.message || "Gemini request failed.", payload);
+      }
+      if (!payload?.assistantTurn?.prompt) {
+        throw new DeckAiError("schema", "Gemini response was missing assistantTurn.prompt.", payload);
+      }
+      return payload.assistantTurn;
+    } catch (error) {
+      throw mapDeckAiError(error, "Unable to reach Gemini right now.");
+    }
+  }
+
   function createInteractionContext() {
     return {
       saveResponse,
@@ -908,16 +959,19 @@
       getSharedResponse,
       isApiConnected: () => Boolean(state.apiConnected),
       requestAiReply: async (message) => {
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message })
+        const assistantTurn = await requestDeckAi({
+          mode: "interaction",
+          phaseKey: resolveDeckAiPhaseKey(),
+          turnCount: 1,
+          transcript: [
+            {
+              role: "user",
+              content: String(message || "")
+            }
+          ],
+          sessionToken: null
         });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(payload?.message || "AI request failed");
-        }
-        return payload.reply || payload.message || "";
+        return assistantTurn.prompt || "";
       }
     };
   }
@@ -1146,15 +1200,22 @@
       }
       aiReply.textContent = "Thinking...";
       try {
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: `Respond briefly and warmly to this 3-2-1 grounding note:\n${text}` })
+        const assistantTurn = await requestDeckAi({
+          mode: "grounding_321",
+          phaseKey: resolveDeckAiPhaseKey(slide),
+          turnCount: 1,
+          transcript: [
+            {
+              role: "user",
+              content: `Respond briefly and warmly to this 3-2-1 grounding note:\n${text}`
+            }
+          ],
+          sessionToken: null
         });
-        const payload = await response.json().catch(() => ({}));
-        aiReply.textContent = payload.reply || payload.message || "Thanks for grounding yourself before learning.";
+        aiReply.textContent = assistantTurn.prompt || "Thanks for grounding yourself before learning.";
       } catch (error) {
-        aiReply.textContent = "Unable to fetch AI response right now. Your reflection has been saved.";
+        const mappedError = mapDeckAiError(error, "Unable to fetch AI response right now.");
+        aiReply.textContent = mappedError.message || "Unable to fetch AI response right now. Your reflection has been saved.";
       }
       saveResponse(slide.id, `${slide.responseKey}__ai`, aiReply.textContent);
     });
