@@ -1,8 +1,14 @@
 (() => {
   const { slides } = window.DECK_DATA;
   const STORAGE_KEY = "reflective-practice.deck-state.v1";
+  const urlParams = new URLSearchParams(window.location.search);
+  const storyboardMode = urlParams.get("storyboard") === "1";
+  const forcedSlide = Number.parseInt(urlParams.get("slide"), 10);
+  const forcedIndex = Number.isFinite(forcedSlide)
+    ? Math.max(0, Math.min(forcedSlide - 1, slides.length - 1))
+    : null;
   let memoryState = null;
-  let storageEnabled = true;
+  let storageEnabled = forcedIndex === null;
 
   function normalizeSavedState(saved) {
     if (!saved || typeof saved !== "object") return { index: 0, responses: {}, completed: false, section3View: "linear" };
@@ -37,6 +43,9 @@
   }
 
   function loadPersistedState() {
+    if (forcedIndex !== null) {
+      return { index: forcedIndex, responses: {}, completed: false, section3View: "linear" };
+    }
     if (!storageEnabled || !window.localStorage) {
       return memoryState || { index: 0, responses: {}, completed: false, section3View: "linear" };
     }
@@ -72,7 +81,7 @@
 
   const persisted = loadPersistedState();
   const state = {
-    index: Math.max(0, Math.min(persisted.index || 0, slides.length - 1)),
+    index: forcedIndex !== null ? forcedIndex : Math.max(0, Math.min(persisted.index || 0, slides.length - 1)),
     responses: persisted.responses || {},
     completed: Boolean(persisted.completed),
     section3View: persisted.section3View === "carousel" ? "carousel" : "linear",
@@ -88,6 +97,10 @@
     prev: document.getElementById("prev-btn"),
     next: document.getElementById("next-btn")
   };
+
+  if (storyboardMode) {
+    document.body.classList.add("storyboard-frame");
+  }
 
   function saveResponse(slideId, fieldKey, value) {
     if (!slideId || !fieldKey) return;
