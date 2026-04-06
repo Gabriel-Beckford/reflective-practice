@@ -38,7 +38,12 @@ window.DECK_DATA = {
       "table-completion",
       "short-answer",
       "gapfill",
-      "matrix"
+      "matrix",
+      "accordion",
+      "quote-card",
+      "interactive-diagram",
+      "padlet-embed",
+      "ai-chat"
     ]
   },
   mediaSchema: {
@@ -197,156 +202,210 @@ window.DECK_DATA = {
       responseKey: "grounding_open"
     },
     {
-      id: "2.1",
+      id: "02.1",
       section: "SECTION 2: THEORY",
-      type: "content",
-      badge: "Slide 2.1",
-      title: "Why Experiential Learning?",
-      lead:
-        "David Kolb argued that knowledge is created through the transformation of experience.",
-      keyPoints: [
-        "Experiential learning is best conceived as a process, not in terms of fixed outcomes.",
-        "Learning is continuous and holistic: it involves your thoughts, feelings, and actions."
+      type: "section-title",
+      badge: "Slide 02.1",
+      title: "Kolb's Experiential Learning Cycle",
+      body: [
+        "In this section, you will use a critical incident from your own context to move through Kolb's reflective cycle.",
+        "Capture your ideas as you go. Your notes will be saved automatically."
       ],
-      media: {
-        type: "icon",
-        src: "groups",
-        alt: "Classroom discussion icon.",
-        caption: "Learning deepens when experience is discussed, questioned, and revisited together.",
-      },
-      callout: "Experiential learning and reflective practice co-exist.",
-      actionPrompt: "As you progress, focus on how reflection turns experience into knowledge."
+      responseKey: "theory_section_title"
     },
     {
-      id: "2.2",
+      id: "02.2",
       section: "SECTION 2: THEORY",
-      type: "single-choice",
-      badge: "Slide 2.2",
-      title: "Knowledge Check",
-      question: "According to Kolb, experiential learning is best understood as...",
-      options: [
-        "(a) a set of fixed outcomes and facts to memorize",
-        "(b) a continuous, holistic process of transforming experience [Correct]",
-        "(c) an innate talent that some educators possess naturally",
-        "(d) a theory completely separated from classroom action"
+      type: "ai-chat",
+      badge: "Slide 02.2",
+      title: "Using Your Experience",
+      body: [
+        "Describe one recent critical incident from your teaching or learning context.",
+        "Aim for one concrete incident, not a general pattern."
       ],
-      correctAnswers: [1],
-      feedbackBridge: "How does seeing learning as a process (not a fixed outcome) prepare you to move through CE → RO → AC → AE?",
-      responseKey: "check_2_2"
+      prompt: "What happened, where, and who was involved?",
+      placeholder: "Example: During group work, one group disengaged while another dominated the task...",
+      responseKey: "theory_critical_incident",
+      aiPrompts: [
+        {
+          id: "incident-clarify",
+          label: "Ask AI to clarify the incident",
+          promptTemplate: "You are a supportive instructional coach. Ask one short follow-up question that helps clarify this critical incident:\n\n{{learnerInput}}",
+          fallbackText: "Try this self-check: add one specific detail about what happened first, then one detail about what happened next."
+        }
+      ]
     },
     {
-      id: "2.3",
+      id: "02.3",
       section: "SECTION 2: THEORY",
-      type: "content",
-      badge: "Slide 2.3",
-      title: "Kolb's Four-Stage Cycle: Overview",
-      lead:
-        "Kolb proposed four phases organised in a continuous cycle to make experiential learning practical.",
-      keyPoints: [
-        "Cycle flow: Concrete Experience (CE) → Reflective Observation (RO) → Abstract Conceptualisation (AC) → Active Experimentation (AE) → back to CE.",
-        "The cycle maps two dimensions:",
-        "Grasping experience: CE to AC.",
-        "Transforming experience: RO to AE."
+      type: "padlet-embed",
+      badge: "Slide 02.3",
+      title: "Share to Padlet",
+      body: [
+        "Optional: Share a one-sentence summary of your critical incident to the class Padlet wall."
       ],
-      media: {
-        type: "icon-bordered",
-        src: "cycle",
-        alt: "Iterative learning cycle icon.",
-        caption: "Visual analogue for Kolb's iterative cycle: experience is captured, reflected on, conceptualised, and tested in action.",
-      },
-      callouts: ["Each phase builds directly upon the previous one."],
-      actionPrompt: "As you read the next slides, identify what changes from one phase to the next."
+      padletUrl: "https://padlet.com/embed/placeholder",
+      responseKey: "theory_padlet_share",
+      padletShareTextKey: "theory_padlet_share_text",
+      copyTextTemplate: "Critical incident summary: {{learnerInput}}",
+      fallbackCopyText: "Padlet is unavailable right now. Copy your summary into your notes and post it later."
     },
     {
-      id: "2.4",
+      id: "02.4",
       section: "SECTION 2: THEORY",
-      type: "multi-choice",
-      badge: "Slide 2.4",
-      title: "Knowledge Check",
-      question: "Select ALL the stages that make up Kolb's Experiential Learning Cycle:",
-      options: [
-        "Concrete Experience [Correct]",
-        "Behavioural Conditioning",
-        "Reflective Observation [Correct]",
-        "Abstract Conceptualisation [Correct]",
-        "Active Experimentation [Correct]",
-        "Summative Assessment"
+      type: "ai-chat",
+      badge: "Slide 02.4",
+      title: "Recalling a Critical Incident",
+      body: [
+        "Use guided prompts to move through the four phases of reflection."
       ],
-      correctAnswers: [0, 2, 3, 4],
-      feedbackBridge: "Which of the four phases do you naturally start with in your own reflection, and which phase do you usually skip?",
-      responseKey: "check_2_4"
+      prompt: "Work through CE → RO → AC → AE using your incident from slide 02.2.",
+      responseKey: "theory_phase_reflection",
+      aiPrompts: [
+        {
+          id: "phase-ce",
+          label: "Concrete Experience",
+          promptTemplate: "Ask one concise question about Concrete Experience only (facts, actors, sequence) for this incident:\n\n{{learnerInput}}",
+          fallbackText: "Concrete Experience fallback: What happened first, and what did you observe directly?"
+        },
+        {
+          id: "phase-ro",
+          label: "Reflective Observation",
+          promptTemplate: "Ask one concise Reflective Observation question (feelings/reactions/patterns) for this incident:\n\n{{learnerInput}}",
+          fallbackText: "Reflective Observation fallback: What surprised or concerned you in the moment?"
+        },
+        {
+          id: "phase-ac",
+          label: "Abstract Conceptualisation",
+          promptTemplate: "Ask one concise Abstract Conceptualisation question (theory/patterns/principles) for this incident:\n\n{{learnerInput}}",
+          fallbackText: "Abstract Conceptualisation fallback: Which idea or framework best explains why this happened?"
+        },
+        {
+          id: "phase-ae",
+          label: "Active Experimentation",
+          promptTemplate: "Ask one concise Active Experimentation question (next-step action/testing) for this incident:\n\n{{learnerInput}}",
+          fallbackText: "Active Experimentation fallback: What will you try differently in your next similar lesson?"
+        }
+      ]
     },
     {
-      id: "2.5",
+      id: "02.5",
       section: "SECTION 2: THEORY",
-      type: "content",
-      badge: "Slide 2.5",
-      title: "Concrete Experience (CE)",
-      lead: "Concrete Experience (CE) starts with a specific event you lived through.",
-      keyPoints: [
-        "Stay fully involved: open, present, and engaged without preconceptions."
-      ],
-      media: {
-        type: "icon",
-        src: "co_present",
-        alt: "Teacher leading a classroom activity icon.",
-        caption: "Concrete Experience starts in the live moment: what learners and teachers are actually doing.",
-      },
-      questionSet: ["Typical questions: What happened? When did it happen? Who was involved? What did I do?"],
-      examples: [
-        "Contextual example: In a Port-au-Prince reading lesson, one group finishes early and chats in Kreyòl, one struggles with vocabulary, and one is deeply engaged."
-      ],
-      actionPrompt: "Capture only what happened first—interpretation comes later."
+      type: "quote-card",
+      badge: "Slide 02.5",
+      title: "Kolb on Experiential Learning",
+      quote: "Learning is the process whereby knowledge is created through the transformation of experience.",
+      quoteSource: "David A. Kolb (1984)",
+      backgroundImage: "images/quote_card_Kolb.jpg",
+      responseKey: "theory_quote_kolb_note",
+      prompt: "Write one sentence about how this quote connects to your incident."
     },
     {
-      id: "2.6",
+      id: "02.6",
       section: "SECTION 2: THEORY",
-      type: "single-choice",
-      badge: "Slide 2.6",
-      title: "Knowledge Check",
-      question: "At the Concrete Experience stage, what is the learner primarily doing?",
-      options: [
-        "(a) Analysing why things happened",
-        "(b) Planning what to do next time",
-        "(c) Fully engaging in a specific, lived event [Correct]",
-        "(d) Reading relevant literature"
+      type: "accordion",
+      badge: "Slide 02.6",
+      title: "Six Principles of Experiential Learning",
+      body: [
+        "Expand each principle to review what it means in practice."
       ],
-      correctAnswers: [2],
-      feedbackBridge: "Think of one recent classroom moment. Which details belong to CE (just what happened) before interpretation begins?",
-      responseKey: "check_2_6"
+      responseKey: "theory_principles_accordion",
+      accordionViewedKey: "theory_accordion_viewed_items",
+      sections: [
+        {
+          heading: "Learning is a process, not an outcome",
+          bullets: [
+            "Focus on growth over time, not one final score.",
+            "Use reflection checkpoints across a sequence of lessons."
+          ]
+        },
+        {
+          heading: "All learning relearns",
+          bullets: [
+            "Learners connect new ideas to existing beliefs and habits.",
+            "Invite learners to compare old and new understandings."
+          ]
+        },
+        {
+          heading: "Learning requires resolving tensions",
+          bullets: [
+            "Balance feeling and thinking, observing and acting.",
+            "Design tasks that ask learners to switch modes intentionally."
+          ]
+        },
+        {
+          heading: "Learning is holistic",
+          bullets: [
+            "Cognition, emotion, and action are interconnected.",
+            "Evaluate not just what learners know, but how they participate."
+          ]
+        },
+        {
+          heading: "Learning is transactional",
+          bullets: [
+            "People and environment shape each other continuously.",
+            "Adapt activities to classroom context and constraints."
+          ]
+        },
+        {
+          heading: "Learning creates knowledge",
+          bullets: [
+            "Knowledge emerges through acting, reflecting, and revising.",
+            "Capture evidence from practice to inform next decisions."
+          ]
+        }
+      ]
     },
     {
-      id: "2.7",
+      id: "02.7",
       section: "SECTION 2: THEORY",
-      type: "content",
-      badge: "Slide 2.7",
-      title: "Reflective Observation (RO)",
-      lead: "Reflective Observation (RO) is where you step back and examine the event from multiple perspectives.",
-      keyPoints: [
-        "Focus on feelings, reactions, and outcomes."
-      ],
-      questionSet: ["Typical questions: How did I feel? What went well? What was surprising? What would a colleague have noticed?"],
-      examples: [
-        "Contextual example: You felt frustrated when one group switched to Kreyòl, but pleased by another group's engagement."
-      ],
-      actionPrompt: "Name at least one feeling and one observed pattern before moving to theory."
+      type: "quote-card",
+      badge: "Slide 02.7",
+      title: "Critical Reflection and Practice",
+      quote: "Reflection is not an individual, internal process only. It is shaped by social, political and organisational contexts.",
+      quoteSource: "Vince (1998)",
+      responseKey: "theory_quote_vince_note",
+      prompt: "What context in your setting most shapes how you reflect?"
     },
     {
-      id: "2.8",
+      id: "02.8",
       section: "SECTION 2: THEORY",
-      type: "single-choice",
-      badge: "Slide 2.8",
-      title: "Knowledge Check",
-      question: "Which of these is a Reflective Observation question?",
-      options: [
-        "(a) What will I do differently next time?",
-        "(b) What does the literature say about group work?",
-        "(c) How did I feel when the group switched to Kreyòl? [Correct]",
-        "(d) What specific text did I use for the lesson?"
+      type: "interactive-diagram",
+      badge: "Slide 02.8",
+      title: "Dimensions of Learning Space",
+      body: [
+        "Select each dimension to reveal its sub-dimensions, then capture one insight."
       ],
-      correctAnswers: [2],
-      feedbackBridge: "What feeling from your own practice might be useful to examine through an RO lens this week?",
-      responseKey: "check_2_8"
+      responseKey: "theory_learning_space_insight",
+      diagramViewedKey: "theory_learning_space_viewed",
+      dimensions: [
+        {
+          id: "psychological",
+          label: "Psychological",
+          details: ["Confidence", "Motivation", "Perceived safety"]
+        },
+        {
+          id: "social",
+          label: "Social",
+          details: ["Peer relationships", "Group norms", "Participation patterns"]
+        },
+        {
+          id: "institutional",
+          label: "Institutional",
+          details: ["Curriculum demands", "Assessment rules", "Time structures"]
+        },
+        {
+          id: "cultural",
+          label: "Cultural",
+          details: ["Language expectations", "Community values", "Identity positioning"]
+        },
+        {
+          id: "physical",
+          label: "Physical",
+          details: ["Room layout", "Resources", "Noise and movement"]
+        }
+      ],
+      prompt: "Which dimension most influenced your incident, and why?"
     },
     {
       id: "2.9",

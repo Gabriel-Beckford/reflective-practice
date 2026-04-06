@@ -877,7 +877,25 @@
   }
 
   function createInteractionContext() {
-    return { saveResponse, getResponse, setFeedback, hideFeedback };
+    return {
+      saveResponse,
+      getResponse,
+      setFeedback,
+      hideFeedback,
+      isApiConnected: () => Boolean(state.apiConnected),
+      requestAiReply: async (message) => {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload?.message || "AI request failed");
+        }
+        return payload.reply || payload.message || "";
+      }
+    };
   }
 
   function renderUnknownInteraction(card, slide, interactionType) {
@@ -1292,7 +1310,12 @@
     "pelmanism",
     "table-completion",
     "short-answer",
-    "gapfill"
+    "gapfill",
+    "accordion",
+    "quote-card",
+    "interactive-diagram",
+    "padlet-embed",
+    "ai-chat"
   ]);
 
   const builtInRenderers = {
