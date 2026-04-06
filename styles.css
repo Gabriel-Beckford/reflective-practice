@@ -1498,3 +1498,41 @@ body.api-locked .api-gate * {
     padding-top: 20px;
   }
 }
+
+.section-title-renderer {
+  background-size: cover;
+  background-position: center;
+  border-radius: 24px;
+  padding: 24px;
+}
+
+.grounding-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.grounding-chip .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.ilo-stack {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.ilo-layer {
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--md-primary-container) calc(86% - (var(--ilo-index) * 9%)), white);
+  display: grid;
+  gap: 4px;
+}
+
+.pathway-selector-renderer .choice-item,
+.personalisation-renderer .choice-item {
+  display: grid;
+  justify-items: start;
+  text-align: left;
+}
