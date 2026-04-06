@@ -1247,7 +1247,7 @@
     const wrap = document.createElement("section");
     wrap.className = "text-renderer api-gate-connect-renderer";
     appendStructuredText(wrap, slide);
-    if (el.apiGate) el.apiGate.hidden = true;
+    if (el.apiGate && state.apiConnected) el.apiGate.hidden = true;
     const status = document.createElement("p");
     const statusText = state.testingConnection
       ? slide.statusLabels?.testing
@@ -1807,10 +1807,32 @@
     }),
     onBeforeExport: (fn) => {
       state.beforeExportHook = typeof fn === "function" ? fn : null;
+    },
+    assertDisconnectedApiGateVisible: () => {
+      const gateVisible = Boolean(el.apiGate && !el.apiGate.hidden);
+      const keyInputVisible = Boolean(el.apiKeyInput && !el.apiKeyInput.hidden);
+      const keyInputFocusable = Boolean(
+        el.apiKeyInput &&
+        !el.apiKeyInput.disabled &&
+        el.apiKeyInput.tabIndex >= 0
+      );
+      return {
+        connected: state.apiConnected,
+        gateVisible,
+        keyInputVisible,
+        keyInputFocusable
+      };
     }
   };
 
   setApiLocked(!state.apiConnected);
   renderSectionMenu();
   render();
+
+  if (!state.apiConnected) {
+    const startupGateState = window.deckHooks.assertDisconnectedApiGateVisible();
+    console.assert(startupGateState.gateVisible, "[deck] Expected #api-gate to be visible when disconnected on first load.");
+    console.assert(startupGateState.keyInputVisible, "[deck] Expected #api-key-input to be visible when disconnected on first load.");
+    console.assert(startupGateState.keyInputFocusable, "[deck] Expected #api-key-input to be focusable when disconnected on first load.");
+  }
 })();
