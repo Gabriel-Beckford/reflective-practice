@@ -45,7 +45,9 @@ window.DECK_DATA = {
       "padlet-embed",
       "ai-chat",
       "linking",
-      "rubric-grade"
+      "rubric-grade",
+      "chatbot-route",
+      "pond-game"
     ]
   },
   mediaSchema: {
@@ -790,16 +792,43 @@ window.DECK_DATA = {
     {
       id: "T.1",
       section: "Slide T.1: Transition to Chatbot",
-      type: "transition",
+      type: "chatbot-route",
       badge: "Slide T.1",
-      title: "Transition to Chatbot",
+      title: "Choose your next step",
       body: [
-        "You're now ready to create your own micro-reflection. The AI will act as a conversational partner, dynamically guiding you through Kolb's cycle.",
-        "You can type or speak. At the end, you'll download your full micro-reflection as a PDF."
+        "You can open the standalone chatbot micro-reflection now, or skip directly to the deck calibration activities.",
+        "If you open the chatbot, return here after exporting your chatbot PDF."
       ],
-      ctaLabel: "Start Micro-Reflection Chatbot",
-      ctaUrl: "chatbot.html",
-      ctaHelperText: "After you finish and download your chatbot PDF, return here to complete the module."
+      responseKey: "chatbot_route_choice",
+      options: [
+        {
+          id: "chatbot",
+          label: "Open chatbot",
+          description: "Launch the external chatbot flow in a new tab, then return to continue.",
+          targetSlideId: "05.0"
+        },
+        {
+          id: "skip",
+          label: "Skip chatbot",
+          description: "Continue directly to deck-based calibration and export.",
+          targetSlideId: "6.1"
+        }
+      ],
+      routeMap: {
+        chatbot: "05.0",
+        skip: "6.1"
+      }
+    },
+    {
+      id: "05.0",
+      section: "SECTION 5: CHATBOT APP (Standalone Micro-Reflection Exercise)",
+      type: "pond-game",
+      badge: "Slide 05.0",
+      title: "Inline Micro-Reflection Pond",
+      body: [
+        "Use this calming pond prompt to capture short CE→RO→AC→AE reflections before rubric calibration."
+      ],
+      responseKey: "pond_game_reflection"
     },
     {
       id: "05.1",

@@ -953,7 +953,9 @@
       "table-completion": "table-completion",
       "short-answer": "short-answer",
       gapfill: "gapfill",
-      linking: "linking"
+      linking: "linking",
+      "chatbot-route": "chatbot-route",
+      "pond-game": "pond-game"
     };
 
     return legacyTypeMap[slide.type] || slide.type || "text";
@@ -1339,7 +1341,9 @@
     "quote-card",
     "interactive-diagram",
     "padlet-embed",
-    "ai-chat"
+    "ai-chat",
+    "chatbot-route",
+    "pond-game"
   ]);
 
   const builtInRenderers = {
@@ -1463,6 +1467,16 @@
   }
 
   function getNextIndex() {
+    const currentSlide = slides[state.index];
+    if (currentSlide && currentSlide.routeMap && currentSlide.responseKey) {
+      const selectedRoute = getResponse(currentSlide.id, currentSlide.responseKey, "");
+      const routeTargetSlideId = currentSlide.routeMap[selectedRoute];
+      if (routeTargetSlideId) {
+        const routeIndex = slides.findIndex((entry) => entry.id === routeTargetSlideId);
+        if (routeIndex >= 0) return findNextIncludedIndex(routeIndex, 1);
+      }
+    }
+
     if (!isCarouselModeActive(state.index)) return findNextIncludedIndex(state.index + 1, 1);
     const currentGroup = getPairGroupByIndex(state.index);
     if (!currentGroup) return findNextIncludedIndex(state.index + 1, 1);

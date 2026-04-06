@@ -1649,3 +1649,52 @@ body.api-locked .api-gate * {
     align-items: start;
   }
 }
+
+.pond-game-renderer {
+  display: grid;
+  gap: 12px;
+}
+
+.pond-canvas {
+  width: 100%;
+  min-height: 220px;
+  border-radius: 14px;
+  border: 1px solid var(--md-outline-variant);
+  background: #cfeaf8;
+}
+
+.pond-phase-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pond-phase-chip {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--md-outline-variant);
+  color: var(--md-on-surface-variant);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.pond-phase-chip.active {
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+}
+
+.pond-phase-chip.done {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+
+.pond-prompt-snippet {
+  font-size: 0.85rem;
+  color: var(--md-outline);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pond-canvas {
+    filter: saturate(0.92);
+  }
+}
