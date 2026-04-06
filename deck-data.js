@@ -47,7 +47,8 @@ window.DECK_DATA = {
       "linking",
       "rubric-grade",
       "chatbot-route",
-      "pond-game"
+      "pond-game",
+      "feedback-form"
     ]
   },
   mediaSchema: {
@@ -811,12 +812,12 @@ window.DECK_DATA = {
           id: "skip",
           label: "Skip chatbot",
           description: "Continue directly to deck-based calibration and export.",
-          targetSlideId: "6.1"
+          targetSlideId: "06.1"
         }
       ],
       routeMap: {
         chatbot: "05.0",
-        skip: "6.1"
+        skip: "06.1"
       }
     },
     {
@@ -1055,43 +1056,62 @@ window.DECK_DATA = {
         "AI feedback deferred. Save your draft rationale and retry when the API connection is available."
     },
     {
-      id: "6.1",
-      section: "SECTION 6: EXPORT",
-      type: "content",
-      badge: "Slide 6.1",
-      title: "Download Deck Reflections",
+      id: "06.1",
+      section: "SECTION 6: EXTENSION",
+      type: "section-title",
+      badge: "Slide 06.1",
+      title: "Extension Activities",
       body: [
-        "Throughout this deck, you've completed grounding activities, analysed micro-reflections, and made emotional connections to the material.",
-        "Click below to download these insights as a PDF. Note: This is separate from the micro-reflection PDF you generated in the chatbot.",
-        "Call-to-Action: Download Deck Responses (Compiles Warm-Up, Micro-Reflection Analysis, Emotional Connection, and Closing 3-2-1 responses)."
-      ]
-    },
-    {
-      id: "7.1",
-      section: "SECTION 7: FEEDBACK & CLOSE",
-      type: "content",
-      badge: "Slide 7.1",
-      title: "Quick Feedback",
-      body: [
-        "To help us improve these asynchronous modules, please take 30 seconds to leave your feedback.",
-        "Call-to-Action: Open Feedback Form"
-      ]
-    },
-    {
-      id: "7.2",
-      section: "SECTION 7: FEEDBACK & CLOSE",
-      type: "input",
-      badge: "Slide 7.2",
-      title: "Closing 3-2-1 Grounding",
-      body: [
-        "To close our session, let's complete a final 3-2-1 grounding activity. Based on what you learned today, write down:",
-        "3 key takeaways about Kolb's experiential learning cycle.",
-        "2 ideas you plan to test in your classroom (Active Experimentation).",
-        "1 lingering question you still have.",
-        "Thank You Message (Post-Submit): Thank you for completing this session. Your responses have been recorded. See you in the next lesson!"
+        "Continue your reflective learning journey with optional tools and resources."
       ],
-      prompt: "Action:[Learner types their final response.]",
-      responseKey: "closing_grounding"
+      alwaysInclude: true
+    },
+    {
+      id: "06.2",
+      section: "SECTION 6: EXTENSION",
+      type: "content",
+      badge: "Slide 06.2",
+      title: "Explore in NotebookLM",
+      body: [
+        "Open NotebookLM to continue your micro-reflection work with your notes and exported responses.",
+        "Use it to compare your CE-RO-AC-AE patterns and draft your next action cycle."
+      ],
+      ctaLabel: "Open NotebookLM",
+      ctaUrl: "https://notebooklm.google.com/",
+      responseKey: "notebooklm_visited",
+      alwaysInclude: true
+    },
+    {
+      id: "06.3",
+      section: "SECTION 6: FEEDBACK",
+      type: "section-title",
+      badge: "Slide 06.3",
+      title: "Session Feedback",
+      body: [
+        "Share your experience so we can improve this module."
+      ],
+      alwaysInclude: true
+    },
+    {
+      id: "06.4",
+      section: "SECTION 6: FEEDBACK",
+      type: "feedback-form",
+      badge: "Slide 06.4",
+      title: "Kolb Microcycle Feedback Form",
+      body: [
+        "Please complete the short form below. Your feedback helps us improve content, pacing, and support."
+      ],
+      responseKey: "feedback_form_v3",
+      feedbackEndpoint: "https://script.google.com/macros/s/AKfycbznNEX9NuWAtpbbWxZ_aExQL_d9fxG3WWYVQuq0U6_YQfr87olZUaRU7Tv4k6m8A-X7/exec",
+      questions: [
+        "Which part of the session was most useful for your learning?",
+        "Where did you feel uncertain, stuck, or overloaded?",
+        "How useful was the CE-RO-AC-AE structure for reflection?",
+        "Which activity should be improved first, and why?",
+        "What change will you apply in your practice after this session?",
+        "Any additional comments for the module team?"
+      ],
+      alwaysInclude: true
     }
   ]
 };
