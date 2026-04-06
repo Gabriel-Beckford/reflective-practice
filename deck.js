@@ -42,6 +42,10 @@
 
   const slides = rawSlides.map(standardizeSlide);
   const STORAGE_KEY = "reflective-practice.deck-state.v1";
+  const PATHWAY_STORAGE_KEY = "reflective-practice.selected-pathway.v1";
+  const SESSION_KEY_API_PRESENT = "apiKeyPresent";
+  const SESSION_KEY_CONNECTED = "connectionEstablished";
+  const ALWAYS_INCLUDED_SECTION_PREFIXES = ["SECTION 6:", "SECTION 7:"];
   const urlParams = new URLSearchParams(window.location.search);
   const storyboardMode = urlParams.get("storyboard") === "1";
   const forcedSlide = Number.parseInt(urlParams.get("slide"), 10);
@@ -52,13 +56,24 @@
   let storageEnabled = forcedIndex === null;
 
   function normalizeSavedState(saved) {
-    if (!saved || typeof saved !== "object") return { index: 0, responses: {}, completed: false, section3View: "linear" };
+    if (!saved || typeof saved !== "object") {
+      return {
+        index: 0,
+        responses: {},
+        completed: false,
+        section3View: "linear",
+        selectedPathway: null,
+        selectedSections: null
+      };
+    }
 
     const normalized = {
       index: Number.isInteger(saved.index) ? saved.index : 0,
       responses: {},
       completed: Boolean(saved.completed),
-      section3View: saved.section3View === "carousel" ? "carousel" : "linear"
+      section3View: saved.section3View === "carousel" ? "carousel" : "linear",
+      selectedPathway: typeof saved.selectedPathway === "string" ? saved.selectedPathway : null,
+      selectedSections: Array.isArray(saved.selectedSections) ? saved.selectedSections : null
     };
 
     if (saved.responses && typeof saved.responses === "object") {
@@ -85,19 +100,19 @@
 
   function loadPersistedState() {
     if (forcedIndex !== null) {
-      return { index: forcedIndex, responses: {}, completed: false, section3View: "linear" };
+      return { index: forcedIndex, responses: {}, completed: false, section3View: "linear", selectedPathway: null, selectedSections: null };
     }
     if (!storageEnabled || !window.localStorage) {
-      return memoryState || { index: 0, responses: {}, completed: false, section3View: "linear" };
+      return memoryState || { index: 0, responses: {}, completed: false, section3View: "linear", selectedPathway: null, selectedSections: null };
     }
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { index: 0, responses: {}, completed: false, section3View: "linear" };
+      if (!raw) return { index: 0, responses: {}, completed: false, section3View: "linear", selectedPathway: null, selectedSections: null };
       return normalizeSavedState(JSON.parse(raw));
     } catch (error) {
       console.warn("Unable to hydrate saved deck responses.", error);
       storageEnabled = false;
-      return { index: 0, responses: {}, completed: false, section3View: "linear" };
+      return { index: 0, responses: {}, completed: false, section3View: "linear", selectedPathway: null, selectedSections: null };
     }
   }
 
@@ -106,7 +121,9 @@
       index: state.index,
       responses: state.responses,
       completed: state.completed,
-      section3View: state.section3View
+      section3View: state.section3View,
+      selectedPathway: state.selectedPathway,
+      selectedSections: state.selectedSections
     };
     if (!storageEnabled || !window.localStorage) return;
     try {
@@ -121,14 +138,25 @@
   }
 
   const persisted = loadPersistedState();
+  const persistedPathwayRaw = window.localStorage ? window.localStorage.getItem(PATHWAY_STORAGE_KEY) : null;
+  let persistedPathway = null;
+  if (persistedPathwayRaw) {
+    try {
+      persistedPathway = JSON.parse(persistedPathwayRaw);
+    } catch (error) {
+      persistedPathway = null;
+    }
+  }
   const state = {
     index: forcedIndex !== null ? forcedIndex : Math.max(0, Math.min(persisted.index || 0, slides.length - 1)),
     responses: persisted.responses || {},
     completed: Boolean(persisted.completed),
     section3View: persisted.section3View === "carousel" ? "carousel" : "linear",
+    selectedPathway: persistedPathway?.selectedPathway || persisted.selectedPathway || null,
+    selectedSections: persistedPathway?.selectedSections || persisted.selectedSections || null,
     beforeExportHook: null,
     sectionMenuOpen: false,
-    apiConnected: false,
+    apiConnected: window.sessionStorage?.getItem(SESSION_KEY_CONNECTED) === "true",
     testingConnection: false
   };
 
@@ -194,6 +222,44 @@
       setAvatarState("idle", "Connected and ready.");
       setConnectionMessage("AI connection established. You can navigate freely.", true);
     }
+  }
+
+  function isAlwaysIncludedSection(sectionLabel = "") {
+    return ALWAYS_INCLUDED_SECTION_PREFIXES.some((prefix) => String(sectionLabel || "").startsWith(prefix));
+  }
+
+  function isSlideIncludedByPathway(slide) {
+    if (!state.selectedSections || !Array.isArray(state.selectedSections) || !state.selectedSections.length) return true;
+    if (!slide || !slide.section) return true;
+    if (slide.section.startsWith("SECTION 0:")) return true;
+    if (slide.section.startsWith("SECTION 1:")) return true;
+    if (isAlwaysIncludedSection(slide.section)) return true;
+    return state.selectedSections.includes(slide.section);
+  }
+
+  function persistPathwaySelection(pathwayId, selectedSections) {
+    state.selectedPathway = pathwayId || null;
+    state.selectedSections = Array.isArray(selectedSections) ? selectedSections : null;
+    if (window.localStorage) {
+      window.localStorage.setItem(
+        PATHWAY_STORAGE_KEY,
+        JSON.stringify({
+          selectedPathway: state.selectedPathway,
+          selectedSections: state.selectedSections
+        })
+      );
+    }
+    persistState(state);
+    sectionSummaries = buildSectionSummaries();
+  }
+
+  function findNextIncludedIndex(startIndex, direction = 1) {
+    let next = startIndex;
+    while (next >= 0 && next < slides.length) {
+      if (isSlideIncludedByPathway(slides[next])) return next;
+      next += direction;
+    }
+    return Math.max(0, Math.min(startIndex, slides.length - 1));
   }
 
   function saveResponse(slideId, fieldKey, value) {
@@ -675,11 +741,12 @@
   const SECTION_THEMES = ["dawn", "sage", "amber", "violet"];
   const SECTION3_LABEL = "SECTION 3: IDENTIFY THE PHASE";
   const pairedGroups = buildPairedGroups();
-  const sectionSummaries = buildSectionSummaries();
+  let sectionSummaries = buildSectionSummaries();
 
   function buildSectionSummaries() {
     const map = new Map();
     slides.forEach((slide, index) => {
+      if (!isSlideIncludedByPathway(slide)) return;
       if (!map.has(slide.section)) {
         map.set(slide.section, {
           section: slide.section,
@@ -695,9 +762,10 @@
   }
 
   function getSectionProgress(index = state.index) {
+    const visibleIndex = findNextIncludedIndex(index, -1);
     return sectionSummaries.map((entry) => {
-      const done = index > entry.lastIndex;
-      const active = index >= entry.firstIndex && index <= entry.lastIndex;
+      const done = visibleIndex > entry.lastIndex;
+      const active = visibleIndex >= entry.firstIndex && visibleIndex <= entry.lastIndex;
       return { ...entry, done, active };
     });
   }
@@ -827,6 +895,13 @@
   function resolveInteractionType(slide) {
     const legacyTypeMap = {
       content: "text",
+      "section-title": "section-title",
+      "grounding-321": "grounding-321",
+      "ilo-stack": "ilo-stack",
+      "personalisation-mbti": "personalisation-mbti",
+      "pathway-selector": "pathway-selector",
+      "api-gate-connect": "api-gate-connect",
+      "api-gate-confirm": "api-gate-confirm",
       "single-choice": "single-choice",
       "multi-choice": "multi-select",
       "multi-yn": "yes-no-matrix",
@@ -956,6 +1031,185 @@
     card.appendChild(wrap);
   }
 
+  function renderSectionTitle(card, slide) {
+    const wrap = document.createElement("section");
+    wrap.className = "text-renderer section-title-renderer";
+    if (slide.backgroundImage) wrap.style.backgroundImage = `url(${slide.backgroundImage})`;
+    appendStructuredText(wrap, slide);
+    card.appendChild(wrap);
+  }
+
+  function renderGrounding321(card, slide) {
+    const wrap = document.createElement("section");
+    wrap.className = "free-response-renderer grounding-321-renderer";
+    if (slide.backgroundImage) wrap.style.backgroundImage = `url(${slide.backgroundImage})`;
+    appendStructuredText(wrap, slide);
+
+    if (Array.isArray(slide.groundingPrompts) && slide.groundingPrompts.length) {
+      const prompts = document.createElement("div");
+      prompts.className = "grounding-prompt-list";
+      slide.groundingPrompts.forEach((item) => {
+        const chip = document.createElement("p");
+        chip.className = "slide-copy grounding-chip";
+        chip.innerHTML = `<span class="material-symbols-outlined" aria-hidden="true">${item.icon}</span> <strong>${item.label}</strong>: ${item.prompt}`;
+        prompts.appendChild(chip);
+      });
+      wrap.appendChild(prompts);
+    }
+
+    const area = document.createElement("textarea");
+    const areaId = `grounding-${slide.id}`;
+    area.id = areaId;
+    area.value = getResponse(slide.id, slide.responseKey, "");
+    area.addEventListener("input", () => saveResponse(slide.id, slide.responseKey, area.value));
+    wrap.appendChild(area);
+
+    const sendBtn = document.createElement("button");
+    sendBtn.type = "button";
+    sendBtn.className = "submit-btn";
+    sendBtn.textContent = "Send to AI";
+    const aiReply = document.createElement("p");
+    aiReply.className = "slide-copy";
+    aiReply.textContent = getResponse(slide.id, `${slide.responseKey}__ai`, "AI reply will appear here after you send.");
+    sendBtn.addEventListener("click", async () => {
+      const text = (area.value || "").trim();
+      if (!text) {
+        aiReply.textContent = "Please enter your 3-2-1 response first.";
+        return;
+      }
+      if (!state.apiConnected) {
+        aiReply.textContent = "AI connection is not established yet. Your response is still saved.";
+        saveResponse(slide.id, `${slide.responseKey}__ai`, aiReply.textContent);
+        return;
+      }
+      aiReply.textContent = "Thinking...";
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: `Respond briefly and warmly to this 3-2-1 grounding note:\n${text}` })
+        });
+        const payload = await response.json().catch(() => ({}));
+        aiReply.textContent = payload.reply || payload.message || "Thanks for grounding yourself before learning.";
+      } catch (error) {
+        aiReply.textContent = "Unable to fetch AI response right now. Your reflection has been saved.";
+      }
+      saveResponse(slide.id, `${slide.responseKey}__ai`, aiReply.textContent);
+    });
+    wrap.append(sendBtn, aiReply);
+    card.appendChild(wrap);
+  }
+
+  function renderIloStack(card, slide) {
+    const wrap = document.createElement("section");
+    wrap.className = "free-response-renderer ilo-stack-renderer";
+    appendStructuredText(wrap, slide);
+    if (Array.isArray(slide.iloLayers)) {
+      const stack = document.createElement("div");
+      stack.className = "ilo-stack";
+      slide.iloLayers.forEach((layer, index) => {
+        const row = document.createElement("div");
+        row.className = "ilo-layer";
+        row.style.setProperty("--ilo-index", String(index));
+        row.innerHTML = `<strong>${layer.level}</strong><span>${layer.text}</span>`;
+        stack.appendChild(row);
+      });
+      wrap.appendChild(stack);
+    }
+    const area = document.createElement("textarea");
+    area.value = getResponse(slide.id, slide.responseKey, "");
+    area.addEventListener("input", () => saveResponse(slide.id, slide.responseKey, area.value));
+    wrap.appendChild(area);
+    card.appendChild(wrap);
+  }
+
+  function renderPersonalisationMbti(card, slide) {
+    const wrap = document.createElement("section");
+    wrap.className = "text-renderer personalisation-renderer";
+    appendStructuredText(wrap, slide);
+    const optionsWrap = document.createElement("div");
+    optionsWrap.className = "choice-list";
+    const selected = getResponse(slide.id, slide.responseKey, "");
+    (slide.mbtiOptions || []).forEach((option) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "choice-item";
+      btn.textContent = option;
+      if (selected === option) btn.classList.add("selected");
+      btn.addEventListener("click", () => {
+        saveResponse(slide.id, slide.responseKey, option);
+        saveResponse(slide.id, "mbtiSkipped", false);
+        render();
+      });
+      optionsWrap.appendChild(btn);
+    });
+    const skip = document.createElement("button");
+    skip.type = "button";
+    skip.className = "submit-btn";
+    skip.textContent = "Skip";
+    skip.addEventListener("click", () => {
+      saveResponse(slide.id, slide.responseKey, "");
+      saveResponse(slide.id, "mbtiSkipped", true);
+      render();
+    });
+    wrap.append(optionsWrap, skip);
+    card.appendChild(wrap);
+  }
+
+  function renderPathwaySelector(card, slide) {
+    const wrap = document.createElement("section");
+    wrap.className = "text-renderer pathway-selector-renderer";
+    appendStructuredText(wrap, slide);
+    const list = document.createElement("div");
+    list.className = "choice-list";
+    const selectedPathway = state.selectedPathway || getResponse(slide.id, slide.responseKey, "");
+    (slide.pathways || []).forEach((pathway) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "choice-item";
+      if (selectedPathway === pathway.id) btn.classList.add("selected");
+      btn.innerHTML = `<strong>${pathway.label}</strong><small>${pathway.timing}</small>`;
+      btn.addEventListener("click", () => {
+        saveResponse(slide.id, slide.responseKey, pathway.id);
+        saveResponse(slide.id, "selectedSections", pathway.sections || []);
+        persistPathwaySelection(pathway.id, pathway.sections || []);
+        render();
+      });
+      list.appendChild(btn);
+    });
+    wrap.appendChild(list);
+    card.appendChild(wrap);
+  }
+
+  function renderApiGateConnect(card, slide) {
+    const wrap = document.createElement("section");
+    wrap.className = "text-renderer api-gate-connect-renderer";
+    appendStructuredText(wrap, slide);
+    if (el.apiGate) el.apiGate.hidden = true;
+    const status = document.createElement("p");
+    const statusText = state.testingConnection
+      ? slide.statusLabels?.testing
+      : (state.apiConnected ? slide.statusLabels?.connected : slide.statusLabels?.idle);
+    status.className = "slide-copy";
+    status.textContent = `Status: ${statusText || "Not connected"}`;
+    wrap.appendChild(status);
+    card.appendChild(wrap);
+  }
+
+  function renderApiGateConfirm(card, slide) {
+    const wrap = document.createElement("section");
+    wrap.className = "text-renderer api-gate-confirm-renderer";
+    appendStructuredText(wrap, slide);
+    const ctaBtn = document.createElement("button");
+    ctaBtn.type = "button";
+    ctaBtn.className = "cta-btn";
+    ctaBtn.textContent = slide.ctaLabel || "Continue";
+    ctaBtn.disabled = !state.apiConnected;
+    ctaBtn.addEventListener("click", () => jumpTo(getNextIndex()));
+    wrap.appendChild(ctaBtn);
+    card.appendChild(wrap);
+  }
+
   function buildDeckExportLines() {
     const prompts = [
       { id: "1.2", label: "Warm-up (Slide 1.2)" },
@@ -1043,6 +1297,13 @@
 
   const builtInRenderers = {
     text: renderTextSlide,
+    "section-title": renderSectionTitle,
+    "grounding-321": renderGrounding321,
+    "ilo-stack": renderIloStack,
+    "personalisation-mbti": renderPersonalisationMbti,
+    "pathway-selector": renderPathwaySelector,
+    "api-gate-connect": renderApiGateConnect,
+    "api-gate-confirm": renderApiGateConfirm,
     "single-choice": renderSingleChoice,
     "multi-select": renderMultiSelect,
     "yes-no-matrix": renderYesNoMatrix,
@@ -1155,25 +1416,28 @@
   }
 
   function getNextIndex() {
-    if (!isCarouselModeActive(state.index)) return state.index + 1;
+    if (!isCarouselModeActive(state.index)) return findNextIncludedIndex(state.index + 1, 1);
     const currentGroup = getPairGroupByIndex(state.index);
-    if (!currentGroup) return state.index + 1;
+    if (!currentGroup) return findNextIncludedIndex(state.index + 1, 1);
     const currentGroupIndex = pairedGroups.findIndex((group) => group.pairingId === currentGroup.pairingId);
     const nextGroup = pairedGroups[currentGroupIndex + 1];
-    return nextGroup ? nextGroup.excerptIndex : Math.min(currentGroup.questionIndex + 1, slides.length - 1);
+    const target = nextGroup ? nextGroup.excerptIndex : Math.min(currentGroup.questionIndex + 1, slides.length - 1);
+    return findNextIncludedIndex(target, 1);
   }
 
   function getPrevIndex() {
-    if (!isCarouselModeActive(state.index)) return state.index - 1;
+    if (!isCarouselModeActive(state.index)) return findNextIncludedIndex(state.index - 1, -1);
     const currentGroup = getPairGroupByIndex(state.index);
-    if (!currentGroup) return state.index - 1;
+    if (!currentGroup) return findNextIncludedIndex(state.index - 1, -1);
     const currentGroupIndex = pairedGroups.findIndex((group) => group.pairingId === currentGroup.pairingId);
     const prevGroup = pairedGroups[currentGroupIndex - 1];
-    return prevGroup ? prevGroup.excerptIndex : Math.max(currentGroup.excerptIndex - 1, 0);
+    const target = prevGroup ? prevGroup.excerptIndex : Math.max(currentGroup.excerptIndex - 1, 0);
+    return findNextIncludedIndex(target, -1);
   }
 
   function jumpTo(index) {
-    state.index = Math.max(0, Math.min(index, slides.length - 1));
+    const bounded = Math.max(0, Math.min(index, slides.length - 1));
+    state.index = isSlideIncludedByPathway(slides[bounded]) ? bounded : findNextIncludedIndex(bounded, 1);
     persistState(state);
     render();
   }
@@ -1182,6 +1446,7 @@
     if (state.testingConnection) return;
     const apiKey = (el.apiKeyInput?.value || "").trim();
     if (!apiKey) {
+      window.sessionStorage?.setItem(SESSION_KEY_API_PRESENT, "false");
       setConnectionMessage("No API key provided. Paste a key to continue.", false);
       setAvatarState("listening", "Awaiting key input.");
       return;
@@ -1193,6 +1458,7 @@
     setAvatarState("thinking", "Testing connection.");
 
     try {
+      window.sessionStorage?.setItem(SESSION_KEY_API_PRESENT, "true");
       const response = await fetch("/api/gemini/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1204,6 +1470,7 @@
         throw new Error(message);
       }
       state.apiConnected = true;
+      window.sessionStorage?.setItem(SESSION_KEY_CONNECTED, "true");
       setAvatarState("responding", "Connection successful.");
       setConnectionMessage("Connected. Deck navigation unlocked.", true);
       setApiLocked(false);
@@ -1211,6 +1478,7 @@
       window.setTimeout(() => setAvatarState("idle", "Connected and ready."), 900);
     } catch (error) {
       state.apiConnected = false;
+      window.sessionStorage?.setItem(SESSION_KEY_CONNECTED, "false");
       setAvatarState("responding", "Connection failed.");
       setConnectionMessage(`Connection failed: ${error.message}`, false);
       setApiLocked(true);
@@ -1221,6 +1489,9 @@
   }
 
   function render() {
+    if (!isSlideIncludedByPathway(slides[state.index])) {
+      state.index = findNextIncludedIndex(state.index, 1);
+    }
     const slide = slides[state.index];
     const interactionType = resolveInteractionType(slide);
     const pairGroup = getPairGroupByIndex(state.index);
@@ -1363,7 +1634,7 @@
     }
   };
 
-  setApiLocked(true);
+  setApiLocked(!state.apiConnected);
   renderSectionMenu();
   render();
 })();

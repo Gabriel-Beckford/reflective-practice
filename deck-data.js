@@ -26,6 +26,8 @@ window.DECK_DATA = {
   title: "Content Storyboard: Kolb's Reflective Cycle",
   interactionSchema: {
     supportedTypes: [
+      "section-title",
+      "pathway-selector",
       "content",
       "single-choice",
       "multi-choice",
@@ -44,6 +46,124 @@ window.DECK_DATA = {
     fields: ["type", "src", "alt", "caption", "credit"]
   },
   slides: [
+    {
+      id: "00.1",
+      section: "SECTION 0: API GATE",
+      type: "api-gate-connect",
+      badge: "Slide 00.1",
+      title: "Connect your AI workspace",
+      body: [
+        "Enter your API key and test your connection before starting the session."
+      ],
+      statusLabels: {
+        idle: "Not connected",
+        testing: "Testing",
+        connected: "Connected",
+        failed: "Failed"
+      },
+      responseKey: "api_connection_gate"
+    },
+    {
+      id: "00.2",
+      section: "SECTION 0: API GATE",
+      type: "api-gate-confirm",
+      badge: "Slide 00.2",
+      title: "Connection established",
+      body: [
+        "Your AI workspace is connected.",
+        "Continue to begin your asynchronous session on Kolb's reflective learning cycle."
+      ],
+      ctaLabel: "Continue to session"
+    },
+    {
+      id: "01.1",
+      section: "SECTION 1: LEAD-IN",
+      type: "section-title",
+      badge: "Slide 01.1",
+      title: "Introduction to Kolb's Reflective Learning Cycle",
+      body: [
+        "Welcome to your asynchronous session."
+      ],
+      backgroundImage: "images/title_background_image.jpg"
+    },
+    {
+      id: "01.2",
+      section: "SECTION 1: LEAD-IN",
+      type: "grounding-321",
+      badge: "Slide 01.2",
+      title: "3-2-1 Grounding Activity",
+      body: [
+        "Before we begin, take a moment to centre yourself in the present.",
+        "3 things you can see.",
+        "2 things you can touch.",
+        "1 thing you can hear."
+      ],
+      groundingPrompts: [
+        { icon: "visibility", label: "See", prompt: "3 things you can see" },
+        { icon: "front_hand", label: "Touch", prompt: "2 things you can touch" },
+        { icon: "hearing", label: "Hear", prompt: "1 thing you can hear" }
+      ],
+      prompt: "Type your 3-2-1 grounding response and click send.",
+      responseKey: "grounding321_opening",
+      backgroundImage: "images/grounding_activity_background.jpg"
+    },
+    {
+      id: "01.3",
+      section: "SECTION 1: LEAD-IN",
+      type: "ilo-stack",
+      badge: "Slide 01.3",
+      title: "Intended Learning Outcomes",
+      body: [
+        "These outcomes are organised from foundational understanding to creation."
+      ],
+      iloLayers: [
+        { level: "Understand", text: "Understand the basic principles of Kolb’s reflective cycle." },
+        { level: "Understand", text: "Identify the four phases of Kolb's reflective cycle." },
+        { level: "Analyze/Evaluate", text: "Distinguish between effective and weak reflective writing." },
+        { level: "Create", text: "Reflect on a personal critical incident." }
+      ],
+      prompt: "Which ILO appeals to you most?",
+      responseKey: "iloAppealResponse"
+    },
+    {
+      id: "01.4",
+      section: "SECTION 1: LEAD-IN",
+      type: "personalisation-mbti",
+      badge: "Slide 01.4",
+      title: "Personalisation",
+      body: [
+        "If you know your MBTI personality type, select it below.",
+        "If not, you can skip this step."
+      ],
+      mbtiOptions: [
+        "INTJ","INTP","ENTJ","ENTP",
+        "INFJ","INFP","ENFJ","ENFP",
+        "ISTJ","ISFJ","ESTJ","ESFJ",
+        "ISTP","ISFP","ESTP","ESFP"
+      ],
+      responseKey: "mbtiType"
+    },
+    {
+      id: "01.5",
+      section: "SECTION 1: LEAD-IN",
+      type: "pathway-selector",
+      badge: "Slide 01.5",
+      title: "Choose your pathway",
+      body: [
+        "Select the pathway that best matches your available time and focus."
+      ],
+      responseKey: "selectedPathway",
+      pathways: [
+        { id: "full", label: "Full Journey", timing: "90 min", sections: ["SECTION 2: THEORY", "SECTION 3: IDENTIFY THE PHASE", "SECTION 4: EVALUATE", "SECTION 5: CHATBOT APP (Standalone Micro-Reflection Exercise)"] },
+        { id: "theory-focused", label: "Theory Focus", timing: "60 min", sections: ["SECTION 2: THEORY", "SECTION 4: EVALUATE"] },
+        { id: "practice-focused", label: "Practice Focus", timing: "60 min", sections: ["SECTION 3: IDENTIFY THE PHASE", "SECTION 4: EVALUATE"] },
+        { id: "chatbot-focused", label: "Chatbot Focus", timing: "50 min", sections: ["SECTION 2: THEORY", "SECTION 5: CHATBOT APP (Standalone Micro-Reflection Exercise)"] },
+        { id: "fast-track", label: "Fast Track", timing: "35 min", sections: ["SECTION 2: THEORY"] },
+        { id: "mapping-track", label: "Input Mapping Track", timing: "45 min", sections: ["SECTION 3: IDENTIFY THE PHASE"] },
+        { id: "evaluation-track", label: "Evaluation Track", timing: "45 min", sections: ["SECTION 4: EVALUATE"] },
+        { id: "chatbot-only", label: "Chatbot Only", timing: "30 min", sections: ["SECTION 5: CHATBOT APP (Standalone Micro-Reflection Exercise)"] }
+      ]
+    },
     {
       id: "1.1",
       section: "SECTION 1: LEAD-IN",
