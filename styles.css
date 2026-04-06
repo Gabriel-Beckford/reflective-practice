@@ -153,6 +153,23 @@ header {
   color: var(--md-outline);
 }
 
+
+.storyboard-link {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--md-primary);
+  text-decoration: none;
+  border: 1px solid var(--md-primary-dim);
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: rgba(234, 221, 255, 0.45);
+}
+
+.storyboard-link:hover,
+.storyboard-link:focus-visible {
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+}
 .api-config {
   display: inline-flex;
   align-items: center;
