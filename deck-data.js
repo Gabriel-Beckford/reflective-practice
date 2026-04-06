@@ -43,7 +43,8 @@ window.DECK_DATA = {
       "quote-card",
       "interactive-diagram",
       "padlet-embed",
-      "ai-chat"
+      "ai-chat",
+      "linking"
     ]
   },
   mediaSchema: {
@@ -226,6 +227,7 @@ window.DECK_DATA = {
       prompt: "What happened, where, and who was involved?",
       placeholder: "Example: During group work, one group disengaged while another dominated the task...",
       responseKey: "theory_critical_incident",
+      sharedResponseKey: "criticalIncidentText",
       aiPrompts: [
         {
           id: "incident-clarify",
@@ -265,24 +267,28 @@ window.DECK_DATA = {
         {
           id: "phase-ce",
           label: "Concrete Experience",
+          sharedPhaseKey: "ce",
           promptTemplate: "Ask one concise question about Concrete Experience only (facts, actors, sequence) for this incident:\n\n{{learnerInput}}",
           fallbackText: "Concrete Experience fallback: What happened first, and what did you observe directly?"
         },
         {
           id: "phase-ro",
           label: "Reflective Observation",
+          sharedPhaseKey: "ro",
           promptTemplate: "Ask one concise Reflective Observation question (feelings/reactions/patterns) for this incident:\n\n{{learnerInput}}",
           fallbackText: "Reflective Observation fallback: What surprised or concerned you in the moment?"
         },
         {
           id: "phase-ac",
           label: "Abstract Conceptualisation",
+          sharedPhaseKey: "ac",
           promptTemplate: "Ask one concise Abstract Conceptualisation question (theory/patterns/principles) for this incident:\n\n{{learnerInput}}",
           fallbackText: "Abstract Conceptualisation fallback: Which idea or framework best explains why this happened?"
         },
         {
           id: "phase-ae",
           label: "Active Experimentation",
+          sharedPhaseKey: "ae",
           promptTemplate: "Ask one concise Active Experimentation question (next-step action/testing) for this incident:\n\n{{learnerInput}}",
           fallbackText: "Active Experimentation fallback: What will you try differently in your next similar lesson?"
         }
@@ -513,83 +519,171 @@ window.DECK_DATA = {
       responseKey: "micro_reflection_analysis"
     },
     {
-      id: "3.1",
+      id: "03.1",
       section: "SECTION 3: IDENTIFY THE PHASE",
-      type: "content",
-      badge: "Slide 3.1",
-      title: "Instructions",
+      type: "drag-drop",
+      badge: "Slide 03.1",
+      title: "Match Reflection Descriptors to Kolb Phases",
       body: [
-        "Now you'll read short excerpts of reflective writing from teaching professionals.",
-        "Your task is to identify which phase of Kolb's cycle each excerpt belongs to: CE, RO, AC, or AE.",
-        "Read carefully — some phases can seem similar. Focus on what the writer is doing in the excerpt."
-      ]
-    },
-    {
-      id: "3.2",
-      section: "SECTION 3: IDENTIFY THE PHASE",
-      type: "content",
-      badge: "Slide 3.2",
-      title: "Excerpt Reading",
-      pairingId: "pair_3_2_3_3",
-      pairingRole: "excerpt",
-      phaseTag: "CE",
-      body: [
-        "Last Tuesday, I taught a vocabulary lesson on health topics. Half the class finished quickly, while another group could not complete the matching task without support."
-      ]
-    },
-    {
-      id: "3.3",
-      section: "SECTION 3: IDENTIFY THE PHASE",
-      type: "single-choice",
-      badge: "Slide 3.3",
-      title: "Excerpt Identification",
-      pairingId: "pair_3_2_3_3",
-      pairingRole: "question",
-      phaseTag: "CE",
-      question: "Which phase of Kolb's cycle does the previous excerpt represent?",
-      options: [
-        "Concrete Experience (CE)",
-        "Reflective Observation (RO)",
-        "Abstract Conceptualisation (AC)",
-        "Active Experimentation (AE)"
+        "Review your earlier critical incident and match each descriptor to the correct phase."
       ],
-      correctAnswers: [0],
-      pairedExcerptId: "3.2",
-      feedbackBridge: "What specific words in the excerpt show the writer is recounting events rather than analysing or planning?",
-      rationaleByOption: {
-        0: "Correct: the writer is describing what happened in a specific classroom event (CE).",
-        1: "Not quite: RO focuses on interpretation of reactions or perspectives, which is not central here.",
-        2: "Not quite: AC would connect the event to theory or general principles.",
-        3: "Not quite: AE would propose a next-step action to test in future teaching."
+      instructions: "Drag each descriptor into the phase where it best belongs.",
+      priorReflection: {
+        title: "Your prior critical incident",
+        sharedKey: "criticalIncidentText",
+        fallback: "No critical incident has been captured yet. Return to slide 02.2 and add one before completing this activity."
       },
-      responseKey: "phase_3_3"
+      items: [
+        { id: "d1", label: "Retelling exactly what happened" },
+        { id: "d2", label: "Noticing feelings and reactions" },
+        { id: "d3", label: "Applying a concept or theory" },
+        { id: "d4", label: "Planning a testable next step" }
+      ],
+      targets: [
+        { id: "ce", label: "Concrete Experience (CE)" },
+        { id: "ro", label: "Reflective Observation (RO)" },
+        { id: "ac", label: "Abstract Conceptualisation (AC)" },
+        { id: "ae", label: "Active Experimentation (AE)" }
+      ],
+      pairs: [
+        { id: "d1", targetId: "ce" },
+        { id: "d2", targetId: "ro" },
+        { id: "d3", targetId: "ac" },
+        { id: "d4", targetId: "ae" }
+      ],
+      responseKey: "phaseMatch_descriptors"
     },
     {
-      id: "3.4",
+      id: "03.2",
       section: "SECTION 3: IDENTIFY THE PHASE",
-      type: "content",
-      badge: "Slide 3.4",
-      title: "Excerpt Reading",
-      pairingId: "pair_3_4_3_5",
-      pairingRole: "excerpt",
-      phaseTag: "RO",
-      body: [
-        "After class, I felt frustrated that stronger students dominated discussion. Looking back, I realize quieter students stopped volunteering after the first ten minutes."
-      ]
+      type: "drag-drop",
+      badge: "Slide 03.2",
+      title: "Map Question Stems to the Right Phase",
+      instructions: "Place each question stem into the most appropriate zone. The zones are intentionally unlabeled.",
+      showTargetLabels: false,
+      items: [
+        { id: "q1", label: "What happened first, and who was involved?" },
+        { id: "q2", label: "What did I directly observe during the incident?" },
+        { id: "q3", label: "What emotions did I notice in myself?" },
+        { id: "q4", label: "What pattern became visible after the lesson?" },
+        { id: "q5", label: "Which concept helps explain this event?" },
+        { id: "q6", label: "How does this connect with known pedagogy?" },
+        { id: "q7", label: "What change will I try next time?" },
+        { id: "q8", label: "How will I measure whether that change worked?" }
+      ],
+      targets: [
+        { id: "ce" },
+        { id: "ro" },
+        { id: "ac" },
+        { id: "ae" }
+      ],
+      pairs: [
+        { id: "q1", targetId: "ce" },
+        { id: "q2", targetId: "ce" },
+        { id: "q3", targetId: "ro" },
+        { id: "q4", targetId: "ro" },
+        { id: "q5", targetId: "ac" },
+        { id: "q6", targetId: "ac" },
+        { id: "q7", targetId: "ae" },
+        { id: "q8", targetId: "ae" }
+      ],
+      responseKey: "phaseMatch_questions"
     },
-    { id: "3.5", section: "SECTION 3: IDENTIFY THE PHASE", type: "single-choice", badge: "Slide 3.5", title: "Excerpt Identification", pairingId: "pair_3_4_3_5", pairingRole: "question", phaseTag: "RO", question: "Which phase of Kolb's cycle does the previous excerpt represent?", options: ["Concrete Experience (CE)", "Reflective Observation (RO)", "Abstract Conceptualisation (AC)", "Active Experimentation (AE)"], correctAnswers: [1], pairedExcerptId: "3.4", feedbackBridge: "Which phrase signals observation and reflection on reactions rather than theory or action planning?", rationaleByOption: { 0: "Not quite: CE retells the event itself, but this excerpt mainly interprets reactions and outcomes.", 1: "Correct: the writer is stepping back to notice feelings and patterns in participation (RO).", 2: "Not quite: AC would explicitly connect to models, concepts, or research.", 3: "Not quite: AE would state a concrete strategy for the next lesson." }, responseKey: "phase_3_5" },
-    { id: "3.6", section: "SECTION 3: IDENTIFY THE PHASE", type: "content", badge: "Slide 3.6", title: "Excerpt Reading", pairingId: "pair_3_6_3_7", pairingRole: "excerpt", phaseTag: "AC", body: ["Reading about wait-time research, I realized my rapid questioning rewards confident students and disadvantages emerging bilingual learners."] },
-    { id: "3.7", section: "SECTION 3: IDENTIFY THE PHASE", type: "single-choice", badge: "Slide 3.7", title: "Excerpt Identification", pairingId: "pair_3_6_3_7", pairingRole: "question", phaseTag: "AC", question: "Which phase of Kolb's cycle does the previous excerpt represent?", options: ["Concrete Experience (CE)", "Reflective Observation (RO)", "Abstract Conceptualisation (AC)", "Active Experimentation (AE)"], correctAnswers: [2], pairedExcerptId: "3.6", feedbackBridge: "What shows the writer is using conceptual knowledge to explain classroom dynamics?", rationaleByOption: { 0: "Not quite: CE would describe the original classroom event in detail.", 1: "Not quite: RO focuses on noticing responses, while this excerpt goes further into explanation.", 2: "Correct: the writer uses research to interpret experience, which is AC.", 3: "Not quite: AE would specify the next intervention to test." }, responseKey: "phase_3_7" },
-    { id: "3.8", section: "SECTION 3: IDENTIFY THE PHASE", type: "content", badge: "Slide 3.8", title: "Excerpt Reading", pairingId: "pair_3_8_3_9", pairingRole: "excerpt", phaseTag: "AE", body: ["In my next reading lesson, I will pre-teach three key terms, provide a bilingual glossary, and compare exit-ticket scores with today's lesson."] },
-    { id: "3.9", section: "SECTION 3: IDENTIFY THE PHASE", type: "single-choice", badge: "Slide 3.9", title: "Excerpt Identification", pairingId: "pair_3_8_3_9", pairingRole: "question", phaseTag: "AE", question: "Which phase of Kolb's cycle does the previous excerpt represent?", options: ["Concrete Experience (CE)", "Reflective Observation (RO)", "Abstract Conceptualisation (AC)", "Active Experimentation (AE)"], correctAnswers: [3], pairedExcerptId: "3.8", feedbackBridge: "Which verbs in the excerpt indicate planned action and testing?", rationaleByOption: { 0: "Not quite: CE is past-tense description of what happened.", 1: "Not quite: RO would emphasise noticing and reflection rather than intervention.", 2: "Not quite: AC would centre explanatory theory or principles.", 3: "Correct: the writer is planning concrete, testable next steps, which is AE." }, responseKey: "phase_3_9" },
-    { id: "3.10", section: "SECTION 3: IDENTIFY THE PHASE", type: "content", badge: "Slide 3.10", title: "Excerpt Reading", pairingId: "pair_3_10_3_11", pairingRole: "excerpt", phaseTag: "CE", body: ["During the pair-work debate, two students switched to Kreyòl while one group finished early and began chatting off-task."] },
-    { id: "3.11", section: "SECTION 3: IDENTIFY THE PHASE", type: "single-choice", badge: "Slide 3.11", title: "Excerpt Identification", pairingId: "pair_3_10_3_11", pairingRole: "question", phaseTag: "CE", question: "Which phase of Kolb's cycle does the previous excerpt represent?", options: ["Concrete Experience (CE)", "Reflective Observation (RO)", "Abstract Conceptualisation (AC)", "Active Experimentation (AE)"], correctAnswers: [0], pairedExcerptId: "3.10", feedbackBridge: "Does the excerpt mostly describe an event, reflect on it, theorize it, or redesign instruction?", rationaleByOption: { 0: "Correct: this is direct event description with no interpretation, fitting CE.", 1: "Not quite: RO would include reflection on meanings, reactions, or perspectives.", 2: "Not quite: AC would involve theoretical framing.", 3: "Not quite: AE would include a forward-looking action plan." }, responseKey: "phase_3_11" },
-    { id: "3.12", section: "SECTION 3: IDENTIFY THE PHASE", type: "content", badge: "Slide 3.12", title: "Excerpt Reading", pairingId: "pair_3_12_3_13", pairingRole: "excerpt", phaseTag: "RO", body: ["I noticed I only redirected off-task behaviour in one group; that may have signalled unequal expectations and lowered accountability in other groups."] },
-    { id: "3.13", section: "SECTION 3: IDENTIFY THE PHASE", type: "single-choice", badge: "Slide 3.13", title: "Excerpt Identification", pairingId: "pair_3_12_3_13", pairingRole: "question", phaseTag: "RO", question: "Which phase of Kolb's cycle does the previous excerpt represent?", options: ["Concrete Experience (CE)", "Reflective Observation (RO)", "Abstract Conceptualisation (AC)", "Active Experimentation (AE)"], correctAnswers: [1], pairedExcerptId: "3.12", feedbackBridge: "Which part of the writing shows the teacher is reflecting on patterns and implications?", rationaleByOption: { 0: "Not quite: CE would stay at factual description of the lesson event.", 1: "Correct: the writer is reflecting on observed behaviour and possible implications (RO).", 2: "Not quite: AC would explicitly connect to an external concept or framework.", 3: "Not quite: AE would provide a specific next action to trial." }, responseKey: "phase_3_13" },
-    { id: "3.14", section: "SECTION 3: IDENTIFY THE PHASE", type: "content", badge: "Slide 3.14", title: "Excerpt Reading", pairingId: "pair_3_14_3_15", pairingRole: "excerpt", phaseTag: "AC", body: ["Using Vygotsky's ZPD helped me see that my extension task was too independent; students needed scaffolded prompts before open-ended discussion."] },
-    { id: "3.15", section: "SECTION 3: IDENTIFY THE PHASE", type: "single-choice", badge: "Slide 3.15", title: "Excerpt Identification", pairingId: "pair_3_14_3_15", pairingRole: "question", phaseTag: "AC", question: "Which phase of Kolb's cycle does the previous excerpt represent?", options: ["Concrete Experience (CE)", "Reflective Observation (RO)", "Abstract Conceptualisation (AC)", "Active Experimentation (AE)"], correctAnswers: [2], pairedExcerptId: "3.14", feedbackBridge: "How does naming ZPD shift this excerpt from observation toward conceptual explanation?", rationaleByOption: { 0: "Not quite: CE would narrate what happened without theory.", 1: "Not quite: RO might include feeling/observation, but no theoretical lens.", 2: "Correct: the writer applies theory (ZPD) to interpret the experience, which is AC.", 3: "Not quite: AE would focus on planned changes and implementation." }, responseKey: "phase_3_15" },
-    { id: "3.16", section: "SECTION 3: IDENTIFY THE PHASE", type: "content", badge: "Slide 3.16", title: "Excerpt Reading", pairingId: "pair_3_16_3_17", pairingRole: "excerpt", phaseTag: "AE", body: ["Tomorrow, I'll assign rotating discussion roles and track turn-taking with a participation chart to test whether quieter students contribute more."] },
-    { id: "3.17", section: "SECTION 3: IDENTIFY THE PHASE", type: "single-choice", badge: "Slide 3.17", title: "Excerpt Identification", pairingId: "pair_3_16_3_17", pairingRole: "question", phaseTag: "AE", question: "Which phase of Kolb's cycle does the previous excerpt represent?", options: ["Concrete Experience (CE)", "Reflective Observation (RO)", "Abstract Conceptualisation (AC)", "Active Experimentation (AE)"], correctAnswers: [3], pairedExcerptId: "3.16", feedbackBridge: "Which evidence in the sentence shows a deliberate experiment with a measurable outcome?", rationaleByOption: { 0: "Not quite: CE would describe a completed event.", 1: "Not quite: RO reflects on what happened rather than implementing a trial.", 2: "Not quite: AC interprets through ideas; this excerpt is about action testing.", 3: "Correct: the writer plans a concrete intervention and measurement, which defines AE." }, responseKey: "phase_3_17" },
+    {
+      id: "03.3",
+      section: "SECTION 3: IDENTIFY THE PHASE",
+      type: "linking",
+      badge: "Slide 03.3",
+      title: "Link Descriptors to Phases in Your Reflection",
+      instructions: "Use the dropdowns to link each descriptor to the phase that best matches your own reflection.",
+      reviewTitle: "Click to review phase definitions",
+      phaseDefinitions: [
+        { id: "ce", label: "Concrete Experience (CE)", text: "Describes the event itself: what happened, where, and with whom." },
+        { id: "ro", label: "Reflective Observation (RO)", text: "Explores reactions, feelings, and observed patterns." },
+        { id: "ac", label: "Abstract Conceptualisation (AC)", text: "Uses concepts, theory, or principles to explain what occurred." },
+        { id: "ae", label: "Active Experimentation (AE)", text: "Identifies a concrete action to test in a future situation." }
+      ],
+      descriptors: [
+        { id: "link1", label: "Narrates event details" },
+        { id: "link2", label: "Interprets reactions and implications" },
+        { id: "link3", label: "Connects with concept or framework" },
+        { id: "link4", label: "Commits to a measurable next step" }
+      ],
+      priorReflection: {
+        title: "Your prior critical incident",
+        sharedKey: "criticalIncidentText",
+        fallback: "No saved incident found yet. Go back to slide 02.2, add your incident, then return here."
+      },
+      expectedLinks: {
+        link1: "ce",
+        link2: "ro",
+        link3: "ac",
+        link4: "ae"
+      },
+      responseKey: "descriptorLinks"
+    },
+    {
+      id: "03.4",
+      section: "SECTION 3: IDENTIFY THE PHASE",
+      type: "matrix",
+      badge: "Slide 03.4",
+      title: "Grasping or Constructing?",
+      question: "Classify each Kolb phase as primarily grasping knowledge or constructing knowledge.",
+      columns: ["Grasping knowledge", "Constructing knowledge"],
+      rows: [
+        { id: "ce", label: "Concrete Experience (CE)" },
+        { id: "ro", label: "Reflective Observation (RO)" },
+        { id: "ac", label: "Abstract Conceptualisation (AC)" },
+        { id: "ae", label: "Active Experimentation (AE)" }
+      ],
+      expectedAnswers: {
+        ce: "Grasping knowledge",
+        ac: "Grasping knowledge",
+        ro: "Constructing knowledge",
+        ae: "Constructing knowledge"
+      },
+      responseKey: "grasp_transform_classification"
+    },
+    {
+      id: "03.5",
+      section: "SECTION 3: IDENTIFY THE PHASE",
+      type: "short-answer",
+      badge: "Slide 03.5",
+      title: "Reflective Process Check 1",
+      question: "When you reread your incident, which detail best anchors your Concrete Experience and why?",
+      minWords: 10,
+      responseKey: "phase_dialogue_q1"
+    },
+    {
+      id: "03.6",
+      section: "SECTION 3: IDENTIFY THE PHASE",
+      type: "short-answer",
+      badge: "Slide 03.6",
+      title: "Reflective Process Check 2",
+      question: "What is one pattern you noticed after stepping back from the event?",
+      minWords: 10,
+      responseKey: "phase_dialogue_q2"
+    },
+    {
+      id: "03.7",
+      section: "SECTION 3: IDENTIFY THE PHASE",
+      type: "short-answer",
+      badge: "Slide 03.7",
+      title: "Reflective Process Check 3",
+      question: "Which idea or framework helps you explain the incident most clearly?",
+      minWords: 10,
+      responseKey: "phase_dialogue_q3"
+    },
+    {
+      id: "03.8",
+      section: "SECTION 3: IDENTIFY THE PHASE",
+      type: "short-answer",
+      badge: "Slide 03.8",
+      title: "Reflective Process Check 4",
+      question: "State one action you will test and describe how you will know whether it worked.",
+      minWords: 12,
+      responseKey: "phase_dialogue_q4"
+    },
     {
       id: "4.1",
       section: "SECTION 4: EVALUATE",

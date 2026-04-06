@@ -16,9 +16,15 @@
 
     const input = document.createElement("textarea");
     input.placeholder = slide.placeholder || "Type your response...";
-    input.value = ctx.getResponse(slide.id, slide.responseKey, "");
+    const sharedSeed = slide.sharedResponseKey && typeof ctx.getSharedResponse === "function"
+      ? ctx.getSharedResponse(slide.sharedResponseKey, "")
+      : "";
+    input.value = ctx.getResponse(slide.id, slide.responseKey, sharedSeed || "");
     input.addEventListener("input", () => {
       ctx.saveResponse(slide.id, slide.responseKey, input.value);
+      if (slide.sharedResponseKey && typeof ctx.saveSharedResponse === "function") {
+        ctx.saveSharedResponse(slide.sharedResponseKey, input.value);
+      }
     });
 
     const buttonRow = document.createElement("div");
@@ -46,12 +52,20 @@
         if (!learnerInput) {
           reply.textContent = "Please add your reflection text first.";
           ctx.saveResponse(slide.id, outputKey, reply.textContent);
+          if (promptDef.sharedPhaseKey && typeof ctx.getSharedResponse === "function" && typeof ctx.saveSharedResponse === "function") {
+            const phaseResponses = ctx.getSharedResponse("phaseResponses", {}) || {};
+            ctx.saveSharedResponse("phaseResponses", { ...phaseResponses, [promptDef.sharedPhaseKey]: reply.textContent });
+          }
           return;
         }
 
         if (!canUseAi(ctx)) {
           reply.textContent = promptDef.fallbackText || "AI is currently unavailable. Continue with your own reflection notes.";
           ctx.saveResponse(slide.id, outputKey, reply.textContent);
+          if (promptDef.sharedPhaseKey && typeof ctx.getSharedResponse === "function" && typeof ctx.saveSharedResponse === "function") {
+            const phaseResponses = ctx.getSharedResponse("phaseResponses", {}) || {};
+            ctx.saveSharedResponse("phaseResponses", { ...phaseResponses, [promptDef.sharedPhaseKey]: reply.textContent });
+          }
           return;
         }
 
@@ -67,6 +81,10 @@
         } finally {
           status.textContent = "";
           ctx.saveResponse(slide.id, outputKey, reply.textContent);
+          if (promptDef.sharedPhaseKey && typeof ctx.getSharedResponse === "function" && typeof ctx.saveSharedResponse === "function") {
+            const phaseResponses = ctx.getSharedResponse("phaseResponses", {}) || {};
+            ctx.saveSharedResponse("phaseResponses", { ...phaseResponses, [promptDef.sharedPhaseKey]: reply.textContent });
+          }
         }
       });
 
