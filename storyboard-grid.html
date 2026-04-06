@@ -94,42 +94,74 @@
 
     <script src="deck-data.js"></script>
     <script>
-      const deck = window.DECK_DATA || { slides: [] };
-      const slides = Array.isArray(deck.slides) ? deck.slides : [];
       const grid = document.getElementById("grid");
       const meta = document.getElementById("meta");
 
-      meta.textContent = `${slides.length} slides rendered in a responsive image grid.`;
+      function renderSlides(slides) {
+        meta.textContent = `${slides.length} slides rendered in a responsive image grid.`;
+        grid.innerHTML = "";
 
-      slides.forEach((slide, index) => {
-        const card = document.createElement("article");
-        card.className = "card";
+        slides.forEach((slide, index) => {
+          const card = document.createElement("article");
+          card.className = "card";
 
-        const viewport = document.createElement("div");
-        viewport.className = "viewport";
+          const viewport = document.createElement("div");
+          viewport.className = "viewport";
 
-        const frame = document.createElement("iframe");
-        frame.loading = "lazy";
-        frame.title = slide.badge || `Slide ${index + 1}`;
-        frame.src = `./index.html?slide=${index + 1}&storyboard=1`;
+          const frame = document.createElement("iframe");
+          frame.loading = "lazy";
+          frame.title = slide.badge || `Slide ${index + 1}`;
+          frame.src = `./index.html?slide=${index + 1}&storyboard=1`;
 
-        viewport.appendChild(frame);
+          viewport.appendChild(frame);
 
-        const caption = document.createElement("div");
-        caption.className = "caption";
+          const caption = document.createElement("div");
+          caption.className = "caption";
 
-        const badge = document.createElement("span");
-        badge.className = "badge";
-        badge.textContent = slide.badge || `Slide ${index + 1}`;
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          badge.textContent = slide.badge || `Slide ${index + 1}`;
 
-        const title = document.createElement("p");
-        title.className = "title";
-        title.textContent = slide.title || "Untitled slide";
+          const title = document.createElement("p");
+          title.className = "title";
+          title.textContent = slide.title || "Untitled slide";
 
-        caption.append(badge, title);
-        card.append(viewport, caption);
-        grid.appendChild(card);
-      });
+          caption.append(badge, title);
+          card.append(viewport, caption);
+          grid.append(card);
+        });
+      }
+
+      async function loadDeckData() {
+        const initialSlides = Array.isArray(window.DECK_DATA?.slides) ? window.DECK_DATA.slides : [];
+        if (initialSlides.length > 0) {
+          return initialSlides;
+        }
+
+        // Fallback: if the external script failed to execute (common with local-file/CORS setups),
+        // try fetching and evaluating the same file manually.
+        try {
+          const response = await fetch("./deck-data.js", { cache: "no-store" });
+          if (!response.ok) {
+            return [];
+          }
+          const source = await response.text();
+          const scope = {};
+          new Function("window", source)(scope);
+          return Array.isArray(scope.DECK_DATA?.slides) ? scope.DECK_DATA.slides : [];
+        } catch {
+          return [];
+        }
+      }
+
+      (async () => {
+        const slides = await loadDeckData();
+        renderSlides(slides);
+
+        if (!slides.length) {
+          meta.textContent = "0 slides rendered. Ensure deck-data.js is reachable from this page.";
+        }
+      })();
     </script>
   </body>
 </html>
