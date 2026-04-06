@@ -152,6 +152,14 @@ async function handleApi(req, res, pathname) {
     return;
   }
 
+  if (typeof body?.sessionToken !== "undefined") {
+    sendJson(res, 400, {
+      code: "unsupported_credential",
+      message: "sessionToken is not accepted. This server uses GEMINI_API_KEY only."
+    });
+    return;
+  }
+
   if (pathname === "/api/gemini/test") {
     const result = await callGemini({ prompt: "Return JSON: {\"ok\":true}" });
     if (result.error) {

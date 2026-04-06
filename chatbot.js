@@ -51,7 +51,6 @@ const appState = {
     AE: []
   },
   shareWithPeers: false,
-  sessionToken: "",
   connectionStatus: CONNECTION_STATUS.NOT_CONFIGURED,
   connectionMessage: "Connect to Gemini before starting chat.",
   generationInFlight: false,
@@ -125,9 +124,7 @@ function renderWelcomeScreen() {
 
     <div class="question-box">
       <p><strong>Gemini Connection</strong></p>
-      <label for="session-token">Session token from backend (optional)</label>
-      <input id="session-token" type="password" value="${escapeHtml(appState.sessionToken)}" placeholder="short-lived token" />
-      <p class="chatbot-hint">Long-lived API keys are kept server-side in <code>GEMINI_API_KEY</code>. The browser never sends keys directly to Google.</p>
+      <p class="chatbot-hint">This app uses a server-managed <code>GEMINI_API_KEY</code>. No API key or token is entered in the browser.</p>
       <p class="chatbot-hint"><strong>Status:</strong> <span class="conn-status ${statusClass}">${appState.connectionStatus}</span> — ${escapeHtml(appState.connectionMessage)}</p>
       <div class="actions">
         <button class="btn" id="connect-btn" type="button" ${appState.connectionStatus === CONNECTION_STATUS.CONNECTING ? "disabled" : ""}>Test Gemini Connection</button>
@@ -156,22 +153,13 @@ function renderWelcomeScreen() {
     });
   });
 
-  document.getElementById("session-token").addEventListener("input", (event) => {
-    appState.sessionToken = event.target.value;
-    if (appState.connectionStatus !== CONNECTION_STATUS.CONNECTING) {
-      appState.connectionStatus = CONNECTION_STATUS.NOT_CONFIGURED;
-      appState.connectionMessage = "Credentials updated. Run connection test.";
-      render();
-    }
-  });
-
   document.getElementById("connect-btn").addEventListener("click", async () => {
     appState.connectionStatus = CONNECTION_STATUS.CONNECTING;
     appState.connectionMessage = "Testing Gemini route and credentials...";
     render();
 
     try {
-      await testGeminiConnection({ sessionToken: appState.sessionToken });
+      await testGeminiConnection();
       appState.connectionStatus = CONNECTION_STATUS.CONNECTED;
       appState.connectionMessage = "Gemini test call succeeded.";
     } catch (error) {
@@ -217,7 +205,6 @@ async function generateNextPrompt(phaseKey) {
   ];
 
   const assistantTurn = await generateAssistantTurn({
-    sessionToken: appState.sessionToken,
     phaseKey,
     turnCount,
     mode: appState.mode,

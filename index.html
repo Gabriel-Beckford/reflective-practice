@@ -58,9 +58,9 @@
     <div class="api-gate" id="api-gate" role="dialog" aria-modal="true" aria-labelledby="api-gate-title">
       <div class="api-gate-panel">
         <h2 id="api-gate-title">Connect your AI workspace</h2>
-        <p>Enter an API key to unlock the deck and test connectivity through the local proxy.</p>
-        <label for="api-key-input">API key</label>
-        <input id="api-key-input" type="password" placeholder="Paste API key" autocomplete="off" />
+        <p>This deck uses a server-managed <code>GEMINI_API_KEY</code>. Test connectivity through the local proxy to continue.</p>
+        <label for="api-key-input">Connection check</label>
+        <input id="api-key-input" type="text" placeholder="No key needed in browser" value="server-managed key" readonly aria-readonly="true" />
         <div class="api-gate-actions">
           <button id="api-test-btn" type="button" class="nav-btn primary">Test Connection</button>
         </div>
