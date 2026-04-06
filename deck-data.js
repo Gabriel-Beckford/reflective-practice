@@ -185,10 +185,10 @@ window.DECK_DATA = {
       ],
       listTitle: "Learning Goals (Bottom to Top):",
       bullets: [
-        "[Understand] Understand the basic principles of Kolb’s reflective cycle.",
-        "[Understand] Identify the four phases of Kolb's reflective cycle.",
-        "[Analyze/Evaluate] Distinguish between effective and weak reflective writing.",
-        "[Create] Reflect on a personal critical incident."
+        "Understand the basic principles of Kolb’s reflective cycle.",
+        "Identify the four phases of Kolb's reflective cycle.",
+        "Distinguish between effective and weak reflective writing.",
+        "Reflect on a personal critical incident."
       ]
     },
     {
@@ -203,7 +203,7 @@ window.DECK_DATA = {
         "2 things you can touch.",
         "1 thing you can hear."
       ],
-      prompt: "Action:[Learner types their response to be saved for their final export.]",
+      prompt: "Type your response to save it for your final export.",
       responseKey: "grounding_open"
     },
     {
@@ -443,7 +443,7 @@ window.DECK_DATA = {
       options: [
         "(a) Describing what happened during the lesson",
         "(b) Expressing how the lesson made them feel",
-        "(c) Drawing on theory and principles to explain the experience [Correct]",
+        "(c) Drawing on theory and principles to explain the experience",
         "(d) Trying out a new teaching strategy"
       ],
       correctAnswers: [2],
@@ -486,7 +486,7 @@ window.DECK_DATA = {
         "(a) I felt frustrated when the group was off-task",
         "(b) Cummins' BICS/CALP framework explains the vocabulary gap",
         "(c) I taught a reading lesson using group work",
-        "(d) Next time, I'll provide a glossary and differentiate the text by level [Correct]"
+        "(d) Next time, I'll provide a glossary and differentiate the text by level"
       ],
       correctAnswers: [3],
       feedbackBridge: "What is one specific, testable step you could take in your next lesson as AE?",
@@ -518,8 +518,8 @@ window.DECK_DATA = {
       body: [
         "Review the three chained micro-reflections from the previous slide. In your own words, theorize what actual learning or professional growth took place across these cycles. What shifted for the teacher?"
       ],
-      prompt: "Action: [Learner types short answer.]",
-      feedback: "[AI evaluates the answer, highlighting how the learner correctly identified the evolution from blaming 'group work' to addressing specific pedagogical mechanics like roles and equity.]",
+      prompt: "Type your short answer.",
+      feedback: "AI feedback highlights how your thinking evolved from blaming group work to addressing specific pedagogical mechanics like roles and equity.",
       responseKey: "micro_reflection_analysis"
     },
     {
@@ -786,8 +786,8 @@ window.DECK_DATA = {
       body: [
         "Think about the strong example we just reviewed involving the tension between using English only vs. allowing a Kreyòl bridge. Have you experienced a similar situation or tension in your own classroom? Connect to this experience emotionally: how did it make you feel when it happened?"
       ],
-      prompt: "Action: [Learner types their short answer.]",
-      feedback: "[AI responds with empathy, explicitly connecting the learner's emotion to Kolb's Reflective Observation (RO) stage, validating that emotion is a critical data point in experiential learning.]",
+      prompt: "Type your short answer.",
+      feedback: "AI responds with empathy and connects your emotion to Kolb's Reflective Observation (RO) stage, validating emotion as a critical data point in experiential learning.",
       responseKey: "emotional_connection"
     },
     {
