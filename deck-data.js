@@ -1,3 +1,27 @@
+/*
+Schema quick-reference (required fields by slide type)
+======================================================
+Shared required slide fields:
+- id, section, sectionId, type, title
+- timingMeta (metadata only; never learner-facing UI copy)
+- pathwayTags (array)
+- assets (object)
+- aiConfig (object)
+
+Interaction required fields:
+- single-choice: question, options[], correctAnswers[], responseKey
+- multi-choice: question, options[], correctAnswers[], responseKey
+- multi-yn: question, statements[], expectedAnswers[], responseKey
+- input: prompt, responseKey
+- short-answer: prompt|question, responseKey
+- drag-drop: instructions, items[], targets[], pairs[], responseKey
+- table-completion: table schema fields + responseKey
+- gapfill: segments/items + responseKey
+- matrix: question, rows[], columns[]|default, expectedAnswers, responseKey
+
+Content-only slides:
+- content / transition / cta: responseKey optional
+*/
 window.DECK_DATA = {
   title: "Content Storyboard: Kolb's Reflective Cycle",
   interactionSchema: {

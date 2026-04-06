@@ -1,5 +1,46 @@
 (() => {
-  const { slides } = window.DECK_DATA;
+  const { slides: rawSlides = [] } = window.DECK_DATA;
+  const RESPONSE_REQUIRED_TYPES = new Set([
+    "single-choice",
+    "multi-choice",
+    "multi-yn",
+    "input",
+    "drag-drop",
+    "pelmanism",
+    "table-completion",
+    "short-answer",
+    "gapfill",
+    "matrix"
+  ]);
+
+  function buildSectionId(sectionLabel = "", fallback = "section-generic") {
+    const slug = String(sectionLabel || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    return slug || fallback;
+  }
+
+  function standardizeSlide(slide = {}) {
+    const normalizedType = slide.type || "content";
+    const normalizedSectionId = slide.sectionId || buildSectionId(slide.section);
+    const responseKey =
+      slide.responseKey ||
+      (RESPONSE_REQUIRED_TYPES.has(normalizedType) ? `${slide.id || normalizedSectionId}_${normalizedType}_response` : null);
+
+    return {
+      ...slide,
+      type: normalizedType,
+      sectionId: normalizedSectionId,
+      responseKey,
+      timingMeta: slide.timingMeta && typeof slide.timingMeta === "object" ? slide.timingMeta : {},
+      pathwayTags: Array.isArray(slide.pathwayTags) ? slide.pathwayTags : [],
+      assets: slide.assets && typeof slide.assets === "object" ? slide.assets : { media: slide.media || null },
+      aiConfig: slide.aiConfig && typeof slide.aiConfig === "object" ? slide.aiConfig : {}
+    };
+  }
+
+  const slides = rawSlides.map(standardizeSlide);
   const STORAGE_KEY = "reflective-practice.deck-state.v1";
   const urlParams = new URLSearchParams(window.location.search);
   const storyboardMode = urlParams.get("storyboard") === "1";
@@ -484,7 +525,7 @@
       target.appendChild(leadHeader);
     }
 
-    appendSlideMedia(target, slide.media);
+    appendSlideMedia(target, slide.assets?.media || slide.media);
 
     if (keyPoints.length || slide.listTitle || slide.bullets?.length) {
       const keyPointsSection = document.createElement("section");
@@ -771,12 +812,16 @@
     return { saveResponse, getResponse, setFeedback, hideFeedback };
   }
 
-  function renderPluggableInteraction(card, slide) {
-    const interactionType = resolveInteractionType(slide);
-    const module = getInteractionModule(interactionType);
-    if (!module || typeof module.render !== "function") return false;
-    module.render(card, slide, createInteractionContext());
-    return true;
+  function renderUnknownInteraction(card, slide, interactionType) {
+    console.warn(`[deck] Unknown interaction type "${interactionType}" for slide ${slide.id}. Rendering safe fallback.`);
+    const wrap = document.createElement("section");
+    wrap.className = "text-renderer unknown-interaction-renderer";
+    const warning = document.createElement("p");
+    warning.className = "slide-copy";
+    warning.textContent = "This slide type is not yet supported in the learner renderer. Showing text fallback.";
+    wrap.appendChild(warning);
+    appendStructuredText(wrap, slide);
+    card.appendChild(wrap);
   }
 
   function resolveInteractionType(slide) {
@@ -987,21 +1032,44 @@
     card.appendChild(wrap);
   }
 
-  const renderByInteractionType = {
+  const MODULE_INTERACTION_TYPES = new Set([
+    "matrix",
+    "drag-drop",
+    "pelmanism",
+    "table-completion",
+    "short-answer",
+    "gapfill"
+  ]);
+
+  const builtInRenderers = {
     text: renderTextSlide,
     "single-choice": renderSingleChoice,
     "multi-select": renderMultiSelect,
     "yes-no-matrix": renderYesNoMatrix,
-    matrix: (card, slide) => renderPluggableInteraction(card, slide) || renderYesNoMatrix(card, slide),
-    "drag-drop": (card, slide) => renderPluggableInteraction(card, slide) || renderTextSlide(card, slide),
-    pelmanism: (card, slide) => renderPluggableInteraction(card, slide) || renderTextSlide(card, slide),
-    "table-completion": (card, slide) => renderPluggableInteraction(card, slide) || renderTextSlide(card, slide),
-    "short-answer": (card, slide) => renderPluggableInteraction(card, slide) || renderFreeResponse(card, slide),
-    gapfill: (card, slide) => renderPluggableInteraction(card, slide) || renderTextSlide(card, slide),
     "free-response": renderFreeResponse,
     cta: renderCtaSlide,
     transition: renderTransitionSlide
   };
+
+  function renderSlideByInteractionType(card, slide, interactionType) {
+    if (MODULE_INTERACTION_TYPES.has(interactionType)) {
+      const module = getInteractionModule(interactionType);
+      if (module && typeof module.render === "function") {
+        module.render(card, slide, createInteractionContext());
+        return;
+      }
+      renderUnknownInteraction(card, slide, interactionType);
+      return;
+    }
+
+    const renderer = builtInRenderers[interactionType];
+    if (typeof renderer === "function") {
+      renderer(card, slide);
+      return;
+    }
+
+    renderUnknownInteraction(card, slide, interactionType);
+  }
 
   function renderSection3PairedUnit(card, pairGroup) {
     const excerptSlide = slides[pairGroup.excerptIndex];
@@ -1200,8 +1268,7 @@
     if (carouselActive && pairGroup) {
       renderSection3PairedUnit(card, pairGroup);
     } else {
-      const renderer = renderByInteractionType[interactionType] || renderTextSlide;
-      renderer(card, slide);
+      renderSlideByInteractionType(card, slide, interactionType);
     }
     card.appendChild(feedback);
 
