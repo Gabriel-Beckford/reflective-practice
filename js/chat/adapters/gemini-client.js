@@ -51,13 +51,12 @@ async function requestJson(url, body, timeoutMs = DEFAULT_TIMEOUT_MS) {
   }
 }
 
-export async function testGeminiConnection({ sessionToken }) {
-  return requestJson("/api/gemini/test", { sessionToken });
+export async function testGeminiConnection() {
+  return requestJson("/api/gemini/test", {});
 }
 
-export async function generateAssistantTurn({ phaseKey, turnCount, transcript, mode, sessionToken }) {
+export async function generateAssistantTurn({ phaseKey, turnCount, transcript, mode }) {
   const payload = await requestJson("/api/gemini/chat", {
-    sessionToken,
     phaseKey,
     turnCount,
     mode,

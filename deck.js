@@ -44,7 +44,6 @@
   const slides = rawSlides.map(standardizeSlide);
   const STORAGE_KEY = "reflective-practice.deck-state.v1";
   const PATHWAY_STORAGE_KEY = "reflective-practice.selected-pathway.v1";
-  const SESSION_KEY_API_PRESENT = "apiKeyPresent";
   const SESSION_KEY_CONNECTED = "connectionEstablished";
   const SHARED_RESPONSE_SLIDE_ID = "__shared__";
   const ALWAYS_INCLUDED_SECTION_PREFIXES = ["SECTION 6:", "SECTION 7:"];
@@ -923,7 +922,7 @@
     });
   }
 
-  async function requestDeckAi({ transcript, mode = "deck", phaseKey, turnCount = 1, sessionToken }) {
+  async function requestDeckAi({ transcript, mode = "deck", phaseKey, turnCount = 1 }) {
     try {
       const response = await fetch("/api/gemini/chat", {
         method: "POST",
@@ -932,8 +931,7 @@
           phaseKey: phaseKey || resolveDeckAiPhaseKey(),
           turnCount,
           transcript: Array.isArray(transcript) ? transcript : [],
-          mode,
-          sessionToken: sessionToken || null
+          mode
         })
       });
       const payload = await response.json().catch(() => ({}));
@@ -968,8 +966,7 @@
               role: "user",
               content: String(message || "")
             }
-          ],
-          sessionToken: null
+          ]
         });
         return assistantTurn.prompt || "";
       }
@@ -1209,8 +1206,7 @@
               role: "user",
               content: `Respond briefly and warmly to this 3-2-1 grounding note:\n${text}`
             }
-          ],
-          sessionToken: null
+          ]
         });
         aiReply.textContent = assistantTurn.prompt || "Thanks for grounding yourself before learning.";
       } catch (error) {
@@ -1681,13 +1677,6 @@
 
   async function testApiConnection() {
     if (state.testingConnection) return;
-    const apiKey = (el.apiKeyInput?.value || "").trim();
-    if (!apiKey) {
-      window.sessionStorage?.setItem(SESSION_KEY_API_PRESENT, "false");
-      setConnectionMessage("No API key provided. Paste a key to continue.", false);
-      setAvatarState("listening", "Awaiting key input.");
-      return;
-    }
 
     state.testingConnection = true;
     if (el.apiTestBtn) el.apiTestBtn.disabled = true;
@@ -1695,11 +1684,10 @@
     setAvatarState("thinking", "Testing connection.");
 
     try {
-      window.sessionStorage?.setItem(SESSION_KEY_API_PRESENT, "true");
       const response = await fetch("/api/gemini/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKeyPresent: true })
+        body: JSON.stringify({})
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
