@@ -233,6 +233,7 @@
   function isSlideIncludedByPathway(slide) {
     if (!state.selectedSections || !Array.isArray(state.selectedSections) || !state.selectedSections.length) return true;
     if (!slide || !slide.section) return true;
+    if (slide.alwaysInclude) return true;
     if (slide.section.startsWith("SECTION 0:")) return true;
     if (slide.section.startsWith("SECTION 1:")) return true;
     if (isAlwaysIncludedSection(slide.section)) return true;
@@ -955,7 +956,8 @@
       gapfill: "gapfill",
       linking: "linking",
       "chatbot-route": "chatbot-route",
-      "pond-game": "pond-game"
+      "pond-game": "pond-game",
+      "feedback-form": "feedback-form"
     };
 
     return legacyTypeMap[slide.type] || slide.type || "text";
@@ -966,7 +968,20 @@
     wrap.className = "text-renderer";
     appendStructuredText(wrap, slide);
 
-    if (slide.id === "6.1") {
+    if (slide.id === "06.2" && slide.ctaUrl) {
+      const openBtn = document.createElement("a");
+      openBtn.className = "cta-btn";
+      openBtn.href = slide.ctaUrl;
+      openBtn.target = "_blank";
+      openBtn.rel = "noopener noreferrer";
+      openBtn.textContent = slide.ctaLabel || "Open resource";
+      openBtn.addEventListener("click", () => {
+        saveResponse(slide.id, slide.responseKey || "notebooklm_visited", new Date().toISOString());
+      });
+      wrap.appendChild(openBtn);
+    }
+
+    if (slide.id === "06.1") {
       const exportBtn = document.createElement("button");
       exportBtn.type = "button";
       exportBtn.className = "cta-btn";
@@ -978,10 +993,13 @@
       exportBtn.addEventListener("click", () => {
         window.pdfExport.downloadPdf({
           filename: "deck-reflections-export.pdf",
-          lines: buildDeckExportLines()
+          lines: window.pdfExport.buildDeckExportLines({
+            slides,
+            responses: state.responses,
+            generatedAt: new Date().toISOString()
+          })
         });
-        status.textContent =
-          "Downloaded deck-reflections-export.pdf. This file only includes 1.2, 2.14, 4.7, and 7.2 responses.";
+        status.textContent = "Downloaded deck-reflections-export.pdf with full V3 response domains.";
       });
 
       wrap.append(exportBtn, status);
@@ -1254,30 +1272,126 @@
     card.appendChild(wrap);
   }
 
-  function buildDeckExportLines() {
-    const prompts = [
-      { id: "1.2", label: "Warm-up (Slide 1.2)" },
-      { id: "2.14", label: "Micro-Reflection Analysis (Slide 2.14)" },
-      { id: "4.7", label: "Emotional Connection (Slide 4.7)" },
-      { id: "7.2", label: "Closing 3-2-1 (Slide 7.2)" }
-    ];
+  function renderFeedbackForm(card, slide) {
+    const wrap = document.createElement("section");
+    wrap.className = "free-response-renderer feedback-form-renderer";
+    appendStructuredText(wrap, slide);
 
-    const lines = [
-      "Deck Reflection Export",
-      `Generated: ${new Date().toISOString()}`,
-      ""
-    ];
+    const baseKey = slide.responseKey || "feedback_form_v3";
+    const nameKey = `${baseKey}__name`;
+    const submittedAtKey = `${baseKey}__submitted_at`;
+    const submitStatusKey = `${baseKey}__submit_status`;
+    const submitErrorKey = `${baseKey}__submit_error`;
 
-    prompts.forEach((item) => {
-      const slide = slides.find((entry) => entry.id === item.id);
-      const responseKey = slide?.responseKey;
-      const response = responseKey ? (getResponse(item.id, responseKey, "") || "").trim() : "";
-      lines.push(item.label);
-      lines.push(response || "No response captured.");
-      lines.push("");
+    const nameLabel = document.createElement("label");
+    nameLabel.className = "slide-copy";
+    nameLabel.setAttribute("for", `feedback-name-${slide.id}`);
+    nameLabel.textContent = "Your name";
+
+    const nameInput = document.createElement("input");
+    nameInput.id = `feedback-name-${slide.id}`;
+    nameInput.type = "text";
+    nameInput.value = getResponse(slide.id, nameKey, "");
+    nameInput.addEventListener("input", () => saveResponse(slide.id, nameKey, nameInput.value));
+    wrap.append(nameLabel, nameInput);
+
+    const questions = Array.isArray(slide.questions) ? slide.questions : [];
+    const answerInputs = [];
+    questions.forEach((question, index) => {
+      const questionKey = `${baseKey}__q${index + 1}`;
+
+      const qLabel = document.createElement("label");
+      qLabel.className = "slide-copy";
+      qLabel.setAttribute("for", `feedback-q${index + 1}-${slide.id}`);
+      qLabel.textContent = `${index + 1}. ${question}`;
+
+      const area = document.createElement("textarea");
+      area.id = `feedback-q${index + 1}-${slide.id}`;
+      area.value = getResponse(slide.id, questionKey, "");
+      area.addEventListener("input", () => saveResponse(slide.id, questionKey, area.value));
+      wrap.append(qLabel, area);
+      answerInputs.push(area);
     });
 
-    return lines;
+    const status = document.createElement("p");
+    status.className = "cta-subtext";
+    status.setAttribute("role", "status");
+    status.setAttribute("aria-live", "polite");
+
+    const submitBtn = document.createElement("button");
+    submitBtn.type = "button";
+    submitBtn.className = "submit-btn";
+    submitBtn.textContent = "Submit feedback";
+
+    const retryBtn = document.createElement("button");
+    retryBtn.type = "button";
+    retryBtn.className = "submit-btn muted";
+    retryBtn.textContent = "Retry submission";
+
+    const savedStatus = getResponse(slide.id, submitStatusKey, "");
+    const savedSubmittedAt = getResponse(slide.id, submittedAtKey, "");
+    const savedError = getResponse(slide.id, submitErrorKey, "");
+    if (savedStatus === "success" && savedSubmittedAt) {
+      status.textContent = `Feedback submitted successfully at ${savedSubmittedAt}.`;
+    } else if (savedStatus === "failed") {
+      status.textContent = `Submission failed. ${savedError || "Please retry."}`;
+    }
+    retryBtn.hidden = savedStatus !== "failed";
+
+    async function runSubmission() {
+      const name = nameInput.value.trim();
+      const responses = answerInputs.map((input) => input.value.trim());
+      if (!name) {
+        status.textContent = "Please enter your name before submitting feedback.";
+        return;
+      }
+      if (responses.some((value) => !value)) {
+        status.textContent = "Please complete all six feedback responses before submitting.";
+        return;
+      }
+
+      const submittedAt = new Date().toISOString();
+      const payload = {
+        timestamp: submittedAt,
+        name,
+        responses,
+        responseMap: Object.fromEntries(responses.map((value, index) => [`q${index + 1}`, value]))
+      };
+
+      submitBtn.disabled = true;
+      retryBtn.disabled = true;
+      status.textContent = "Submitting feedback...";
+
+      try {
+        const response = await fetch(slide.feedbackEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(`Server returned ${response.status}`);
+
+        saveResponse(slide.id, baseKey, payload);
+        saveResponse(slide.id, submittedAtKey, submittedAt);
+        saveResponse(slide.id, submitStatusKey, "success");
+        saveResponse(slide.id, submitErrorKey, "");
+        status.textContent = `Feedback submitted successfully at ${submittedAt}.`;
+        retryBtn.hidden = true;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unexpected submission error";
+        saveResponse(slide.id, submitStatusKey, "failed");
+        saveResponse(slide.id, submitErrorKey, errorMessage);
+        status.textContent = `Submission failed. ${errorMessage}. You can retry now.`;
+        retryBtn.hidden = false;
+      } finally {
+        submitBtn.disabled = false;
+        retryBtn.disabled = false;
+      }
+    }
+
+    submitBtn.addEventListener("click", runSubmission);
+    retryBtn.addEventListener("click", runSubmission);
+    wrap.append(submitBtn, retryBtn, status);
+    card.appendChild(wrap);
   }
 
   function renderCtaSlide(card, slide) {
@@ -1360,7 +1474,8 @@
     "yes-no-matrix": renderYesNoMatrix,
     "free-response": renderFreeResponse,
     cta: renderCtaSlide,
-    transition: renderTransitionSlide
+    transition: renderTransitionSlide,
+    "feedback-form": renderFeedbackForm
   };
 
   function renderSlideByInteractionType(card, slide, interactionType) {
@@ -1640,7 +1755,7 @@
     const completionMessageId = "completion-message";
     const existingMessage = document.getElementById(completionMessageId);
     if (existingMessage) existingMessage.remove();
-    if (state.completed && slide.id === "7.2") {
+    if (state.completed && slide.id === "06.4") {
       const completionMessage = document.createElement("p");
       completionMessage.id = completionMessageId;
       completionMessage.className = "completion-message";
