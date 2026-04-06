@@ -1,3 +1,10 @@
+/**
+ * LEGACY ARCHIVE FILE (DEPRECATED)
+ * Archived on: 2026-04-06
+ * Reason: Replaced by canonical runtime path using index.html + deck-data.js + deck.js.
+ * Do not load this file in active runtime script tags.
+ */
+
 const slides = [
   {
     id: "1.1",

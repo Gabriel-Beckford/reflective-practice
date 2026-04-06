@@ -1,0 +1,15 @@
+name: Runtime path check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  runtime-path:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate canonical runtime path
+        run: ./scripts/check-runtime-path.sh
