@@ -1536,3 +1536,43 @@ body.api-locked .api-gate * {
   justify-items: start;
   text-align: left;
 }
+
+.drag-drop-layout {
+  display: grid;
+  gap: 14px;
+}
+
+.drag-drop-board,
+.drag-drop-zones {
+  display: grid;
+  gap: 12px;
+}
+
+.drag-drop-zone.incomplete .drop-zone-slot {
+  border: 1.5px dashed var(--md-error);
+  background: color-mix(in srgb, var(--md-error) 8%, var(--md-surface));
+}
+
+.prior-reflection-panel {
+  padding: 14px;
+}
+
+.linking-renderer {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 900px) {
+  .drag-drop-layout {
+    grid-template-columns: minmax(240px, 1fr) minmax(0, 1.4fr);
+    align-items: start;
+  }
+}
+
+.linking-renderer select {
+  min-height: 42px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--md-outline-variant);
+  padding: 8px 10px;
+  background: var(--md-surface);
+}

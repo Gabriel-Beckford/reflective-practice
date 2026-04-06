@@ -10,7 +10,8 @@
     "table-completion",
     "short-answer",
     "gapfill",
-    "matrix"
+    "matrix",
+    "linking"
   ]);
 
   function buildSectionId(sectionLabel = "", fallback = "section-generic") {
@@ -45,6 +46,7 @@
   const PATHWAY_STORAGE_KEY = "reflective-practice.selected-pathway.v1";
   const SESSION_KEY_API_PRESENT = "apiKeyPresent";
   const SESSION_KEY_CONNECTED = "connectionEstablished";
+  const SHARED_RESPONSE_SLIDE_ID = "__shared__";
   const ALWAYS_INCLUDED_SECTION_PREFIXES = ["SECTION 6:", "SECTION 7:"];
   const urlParams = new URLSearchParams(window.location.search);
   const storyboardMode = urlParams.get("storyboard") === "1";
@@ -266,7 +268,26 @@
     if (!slideId || !fieldKey) return;
     const currentSlideResponses = state.responses[slideId] || {};
     state.responses[slideId] = { ...currentSlideResponses, [fieldKey]: value };
+
+    if (fieldKey === "criticalIncidentText" || fieldKey === "theory_critical_incident") {
+      const shared = state.responses[SHARED_RESPONSE_SLIDE_ID] || {};
+      state.responses[SHARED_RESPONSE_SLIDE_ID] = { ...shared, criticalIncidentText: value };
+    }
+
     persistState(state);
+  }
+
+  function saveSharedResponse(fieldKey, value) {
+    if (!fieldKey) return;
+    const shared = state.responses[SHARED_RESPONSE_SLIDE_ID] || {};
+    state.responses[SHARED_RESPONSE_SLIDE_ID] = { ...shared, [fieldKey]: value };
+    persistState(state);
+  }
+
+  function getSharedResponse(fieldKey, fallback = null) {
+    const shared = state.responses[SHARED_RESPONSE_SLIDE_ID];
+    if (!shared || typeof shared !== "object") return fallback;
+    return Object.prototype.hasOwnProperty.call(shared, fieldKey) ? shared[fieldKey] : fallback;
   }
 
   function getResponse(slideId, fieldKey, fallback = null) {
@@ -882,6 +903,8 @@
       getResponse,
       setFeedback,
       hideFeedback,
+      saveSharedResponse,
+      getSharedResponse,
       isApiConnected: () => Boolean(state.apiConnected),
       requestAiReply: async (message) => {
         const response = await fetch("/api/chat", {
@@ -929,7 +952,8 @@
       pelmanism: "pelmanism",
       "table-completion": "table-completion",
       "short-answer": "short-answer",
-      gapfill: "gapfill"
+      gapfill: "gapfill",
+      linking: "linking"
     };
 
     return legacyTypeMap[slide.type] || slide.type || "text";
