@@ -85,7 +85,10 @@
     responses: persisted.responses || {},
     completed: Boolean(persisted.completed),
     section3View: persisted.section3View === "carousel" ? "carousel" : "linear",
-    beforeExportHook: null
+    beforeExportHook: null,
+    sectionMenuOpen: false,
+    apiConnected: false,
+    testingConnection: false
   };
 
   const el = {
@@ -95,11 +98,61 @@
     progress: document.getElementById("progress-fill"),
     slideId: document.getElementById("slide-id"),
     prev: document.getElementById("prev-btn"),
-    next: document.getElementById("next-btn")
+    next: document.getElementById("next-btn"),
+    menuToggle: document.getElementById("menu-toggle"),
+    menuClose: document.getElementById("menu-close"),
+    menu: document.getElementById("section-menu"),
+    menuOverlay: document.getElementById("menu-overlay"),
+    sectionNav: document.getElementById("section-nav"),
+    avatarShell: document.getElementById("avatar-shell"),
+    avatarStatus: document.getElementById("avatar-status"),
+    thinkingIndicator: document.getElementById("thinking-indicator"),
+    connectionStatus: document.getElementById("connection-status"),
+    apiGate: document.getElementById("api-gate"),
+    apiKeyInput: document.getElementById("api-key-input"),
+    apiTestBtn: document.getElementById("api-test-btn"),
+    apiGateStatus: document.getElementById("api-gate-status")
   };
 
   if (storyboardMode) {
     document.body.classList.add("storyboard-frame");
+  }
+
+  function setAvatarState(mode, message) {
+    if (!el.avatarShell) return;
+    ["idle", "listening", "thinking", "responding"].forEach((stateClass) => {
+      el.avatarShell.classList.toggle(stateClass, mode === stateClass);
+    });
+    if (el.avatarStatus && message) el.avatarStatus.textContent = message;
+    if (el.thinkingIndicator) {
+      const showThinking = mode === "thinking";
+      el.thinkingIndicator.hidden = !showThinking;
+      el.thinkingIndicator.setAttribute("aria-hidden", showThinking ? "false" : "true");
+    }
+  }
+
+  function setConnectionMessage(message, ok = false) {
+    if (el.connectionStatus) {
+      el.connectionStatus.textContent = message;
+      el.connectionStatus.classList.toggle("ok", ok);
+    }
+    if (el.apiGateStatus) el.apiGateStatus.textContent = message;
+  }
+
+  function setApiLocked(locked) {
+    document.body.classList.toggle("api-locked", locked);
+    if (el.apiGate) el.apiGate.hidden = !locked;
+    if (locked) {
+      if (state.index !== 0) {
+        state.index = 0;
+        persistState(state);
+      }
+      setAvatarState("listening", "Waiting for AI workspace connection.");
+      setConnectionMessage("AI connection required before progression.", false);
+    } else {
+      setAvatarState("idle", "Connected and ready.");
+      setConnectionMessage("AI connection established. You can navigate freely.", true);
+    }
   }
 
   function saveResponse(slideId, fieldKey, value) {
@@ -581,6 +634,64 @@
   const SECTION_THEMES = ["dawn", "sage", "amber", "violet"];
   const SECTION3_LABEL = "SECTION 3: IDENTIFY THE PHASE";
   const pairedGroups = buildPairedGroups();
+  const sectionSummaries = buildSectionSummaries();
+
+  function buildSectionSummaries() {
+    const map = new Map();
+    slides.forEach((slide, index) => {
+      if (!map.has(slide.section)) {
+        map.set(slide.section, {
+          section: slide.section,
+          firstIndex: index,
+          lastIndex: index,
+          title: slide.title
+        });
+      } else {
+        map.get(slide.section).lastIndex = index;
+      }
+    });
+    return [...map.values()];
+  }
+
+  function getSectionProgress(index = state.index) {
+    return sectionSummaries.map((entry) => {
+      const done = index > entry.lastIndex;
+      const active = index >= entry.firstIndex && index <= entry.lastIndex;
+      return { ...entry, done, active };
+    });
+  }
+
+  function toggleMenu(open) {
+    state.sectionMenuOpen = Boolean(open);
+    if (el.menu) el.menu.hidden = !state.sectionMenuOpen;
+    if (el.menuOverlay) el.menuOverlay.hidden = !state.sectionMenuOpen;
+    if (el.menuToggle) el.menuToggle.setAttribute("aria-expanded", state.sectionMenuOpen ? "true" : "false");
+  }
+
+  function renderSectionMenu() {
+    if (!el.sectionNav) return;
+    const list = document.createElement("ul");
+    list.className = "section-nav-list";
+    getSectionProgress().forEach((sectionEntry) => {
+      const item = document.createElement("li");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "section-link";
+      if (sectionEntry.active) button.classList.add("active");
+      if (sectionEntry.done) button.classList.add("done");
+      button.disabled = !state.apiConnected;
+      button.innerHTML = `<strong>${sectionEntry.section}</strong><small>${sectionEntry.title}</small>`;
+      button.addEventListener("click", () => {
+        if (!state.apiConnected) return;
+        jumpTo(sectionEntry.firstIndex);
+        toggleMenu(false);
+      });
+      item.appendChild(button);
+      list.appendChild(item);
+    });
+    el.sectionNav.innerHTML = "";
+    el.sectionNav.appendChild(list);
+  }
 
   function getSectionMeta(sectionLabel = "") {
     const normalizedLabel = String(sectionLabel || "").trim();
@@ -999,6 +1110,48 @@
     render();
   }
 
+  async function testApiConnection() {
+    if (state.testingConnection) return;
+    const apiKey = (el.apiKeyInput?.value || "").trim();
+    if (!apiKey) {
+      setConnectionMessage("No API key provided. Paste a key to continue.", false);
+      setAvatarState("listening", "Awaiting key input.");
+      return;
+    }
+
+    state.testingConnection = true;
+    if (el.apiTestBtn) el.apiTestBtn.disabled = true;
+    setConnectionMessage("Testing connection via /api/gemini/test...", false);
+    setAvatarState("thinking", "Testing connection.");
+
+    try {
+      const response = await fetch("/api/gemini/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKeyPresent: true })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const message = payload?.message || "Connection failed.";
+        throw new Error(message);
+      }
+      state.apiConnected = true;
+      setAvatarState("responding", "Connection successful.");
+      setConnectionMessage("Connected. Deck navigation unlocked.", true);
+      setApiLocked(false);
+      render();
+      window.setTimeout(() => setAvatarState("idle", "Connected and ready."), 900);
+    } catch (error) {
+      state.apiConnected = false;
+      setAvatarState("responding", "Connection failed.");
+      setConnectionMessage(`Connection failed: ${error.message}`, false);
+      setApiLocked(true);
+    } finally {
+      state.testingConnection = false;
+      if (el.apiTestBtn) el.apiTestBtn.disabled = false;
+    }
+  }
+
   function render() {
     const slide = slides[state.index];
     const interactionType = resolveInteractionType(slide);
@@ -1065,18 +1218,25 @@
     el.container.appendChild(card);
 
     el.section.textContent = slide.section;
+    const activeSection = sectionSummaries.find((entry) => state.index >= entry.firstIndex && state.index <= entry.lastIndex);
+    const sectionOffset = activeSection ? state.index - activeSection.firstIndex + 1 : state.index + 1;
+    const sectionSpan = activeSection ? activeSection.lastIndex - activeSection.firstIndex + 1 : slides.length;
+
     if (carouselActive && pairGroup) {
       const pairIndex = pairedGroups.findIndex((group) => group.pairingId === pairGroup.pairingId);
       el.slideId.textContent = `Pair ${pairIndex + 1}`;
-      el.counter.textContent = `Pair ${pairIndex + 1} of ${pairedGroups.length}`;
+      el.counter.textContent = `Pair ${pairIndex + 1} of ${pairedGroups.length} · ${activeSection?.section || "Section"}`;
     } else {
       el.slideId.textContent = `Slide ${slide.id}`;
-      el.counter.textContent = `Slide ${state.index + 1} of ${slides.length}`;
+      el.counter.textContent = `Slide ${state.index + 1} of ${slides.length} · Section progress ${sectionOffset}/${sectionSpan}`;
     }
-    el.progress.style.width = `${((state.index + 1) / slides.length) * 100}%`;
+    el.progress.style.width = `${(sectionOffset / sectionSpan) * 100}%`;
 
-    el.prev.disabled = state.index === 0;
+    const lockActive = !state.apiConnected;
+    el.prev.disabled = lockActive || state.index === 0;
+    el.next.disabled = lockActive;
     el.next.textContent = state.index === slides.length - 1 ? "Submit" : "Next";
+    renderSectionMenu();
 
     const completionMessageId = "completion-message";
     const existingMessage = document.getElementById(completionMessageId);
@@ -1092,7 +1252,18 @@
   }
 
   el.prev.addEventListener("click", () => jumpTo(getPrevIndex()));
+  if (el.menuToggle) el.menuToggle.addEventListener("click", () => toggleMenu(!state.sectionMenuOpen));
+  if (el.menuClose) el.menuClose.addEventListener("click", () => toggleMenu(false));
+  if (el.menuOverlay) el.menuOverlay.addEventListener("click", () => toggleMenu(false));
+  if (el.apiTestBtn) el.apiTestBtn.addEventListener("click", testApiConnection);
+
   el.next.addEventListener("click", () => {
+    if (!state.apiConnected) {
+      setFeedback("Connection required", "Connect to the API workspace before moving to the next slide.", true);
+      setApiLocked(true);
+      return;
+    }
+
     const validation = validateCurrentSlide();
     if (!validation.valid) {
       setFeedback("Hold on", validation.message, true);
@@ -1125,5 +1296,7 @@
     }
   };
 
+  setApiLocked(true);
+  renderSectionMenu();
   render();
 })();

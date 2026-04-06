@@ -13,8 +13,13 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div class="menu-overlay" id="menu-overlay" hidden></div>
+
     <header>
       <div class="header-left">
+        <button class="menu-toggle" id="menu-toggle" type="button" aria-expanded="false" aria-controls="section-menu" aria-label="Open section menu">
+          ☰
+        </button>
         <span class="header-label">Kolb's Reflective Cycle</span>
         <span class="header-section" id="section-label">Section</span>
       </div>
@@ -25,7 +30,22 @@
       </div>
     </header>
 
+    <aside class="section-menu" id="section-menu" aria-label="Section navigation" hidden>
+      <div class="section-menu-head">
+        <h2>Sections</h2>
+        <button class="menu-close" id="menu-close" type="button" aria-label="Close section menu">✕</button>
+      </div>
+      <nav id="section-nav"></nav>
+    </aside>
+
+    <div class="avatar-shell idle" id="avatar-shell" aria-live="polite">
+      <div class="avatar-face" aria-hidden="true"></div>
+      <p class="avatar-status" id="avatar-status">Avatar is idle.</p>
+      <p class="thinking-indicator" id="thinking-indicator" hidden>thinking...</p>
+    </div>
+
     <main>
+      <div class="connection-status" id="connection-status" role="status" aria-live="polite">AI connection required before progression.</div>
       <div id="slide-container" aria-live="polite"></div>
     </main>
 
@@ -34,6 +54,19 @@
       <div class="slide-count" id="slide-id">Slide</div>
       <button class="nav-btn primary" id="next-btn" type="button">Next</button>
     </footer>
+
+    <div class="api-gate" id="api-gate" role="dialog" aria-modal="true" aria-labelledby="api-gate-title">
+      <div class="api-gate-panel">
+        <h2 id="api-gate-title">Connect your AI workspace</h2>
+        <p>Enter an API key to unlock the deck and test connectivity through the local proxy.</p>
+        <label for="api-key-input">API key</label>
+        <input id="api-key-input" type="password" placeholder="Paste API key" autocomplete="off" />
+        <div class="api-gate-actions">
+          <button id="api-test-btn" type="button" class="nav-btn primary">Test Connection</button>
+        </div>
+        <p class="api-gate-status" id="api-gate-status">Not connected.</p>
+      </div>
+    </div>
 
     <script src="deck-data.js"></script>
     <script src="pdf-export.js"></script>
