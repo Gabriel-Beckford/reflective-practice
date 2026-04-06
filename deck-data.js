@@ -44,7 +44,8 @@ window.DECK_DATA = {
       "interactive-diagram",
       "padlet-embed",
       "ai-chat",
-      "linking"
+      "linking",
+      "rubric-grade"
     ]
   },
   mediaSchema: {
@@ -801,48 +802,228 @@ window.DECK_DATA = {
       ctaHelperText: "After you finish and download your chatbot PDF, return here to complete the module."
     },
     {
-      id: "5.1",
+      id: "05.1",
       section: "SECTION 5: CHATBOT APP (Standalone Micro-Reflection Exercise)",
-      type: "content",
-      badge: "Screen 1",
-      title: "Welcome",
-      lead: "Heading: Micro-Reflection",
-      actionPrompt: "Learner selects 'Type' or 'Speak', then clicks 'Begin'."
+      type: "rubric-grade",
+      badge: "Slide 05.1",
+      title: "Rubric Calibration: Exemplar A",
+      lead: "Read the exemplar, assign a rubric grade, and explain your rationale.",
+      responseKey: "rubric_grade_05_1",
+      rubricMeta: {
+        rubricId: "kolb-micro-reflection-rubric-v1",
+        criterion: "Concrete Experience specificity",
+        scoreLabels: [
+          { value: "1", label: "1 — Emerging" },
+          { value: "2", label: "2 — Developing" },
+          { value: "3", label: "3 — Proficient" },
+          { value: "4", label: "4 — Advanced" }
+        ]
+      },
+      exemplarPayload: {
+        title: "Exemplar A — Concrete Experience",
+        text:
+          "Last Thursday during my mixed-ability Grade 9 science lab, I asked groups to design a filtration system with limited materials. One group finished quickly and became loud, while another group stopped participating after a disagreement about roles. I noticed two students quietly packing up before the timer ended. I paused the class with four minutes remaining, reset expectations, and assigned each team a spokesperson and a materials manager for the final share-out."
+      },
+      aiFeedbackPromptTemplate:
+        "You are calibrating rubric judgments for Kolb micro-reflections. Criterion: {{criterion}}. Grade selected: {{gradeLabel}}. Rationale: {{rationale}}. Exemplar: {{exemplar}}. Return concise feedback in 2-3 sentences with one affirming point and one actionable suggestion.",
+      aiFallbackText:
+        "AI feedback deferred. Save your draft rationale and retry when the API connection is available."
     },
     {
-      id: "5.2",
+      id: "05.2",
       section: "SECTION 5: CHATBOT APP (Standalone Micro-Reflection Exercise)",
-      type: "content",
-      badge: "Screen 2",
-      title: "Phase Dialogue (Dynamic Progressive AI)",
-      lead:
-        "The AI asks an initial prompt and up to two dynamic follow-up questions for each phase.",
-      keyPoints: [
-        "The dialogue flow covers CE, RO, AC, and AE in sequence."
-      ],
-      examples: [
-        "Example: Phase 1 (CE) prompt — \"Let's begin with a Concrete Experience... what happened and who was involved?\"",
-        "Example: Phase 2 (RO) transition — \"How did this moment make you feel, and what were students feeling?\"",
-        "Example: Phase 3 (AC) transition — \"Can you connect this to frameworks, or explain why it happened more broadly?\"",
-        "Example: Phase 4 (AE) transition — \"What specific step will you take differently next time?\""
-      ],
-      callouts: [
-        "After each user response, AI asks 1–2 contextual follow-ups to deepen detail rather than using a rigid script.",
-      ],
-      actionPrompt: "Track how each follow-up clarifies evidence, interpretation, theory, and next action."
+      type: "rubric-grade",
+      badge: "Slide 05.2",
+      title: "Rubric Calibration: Exemplar B",
+      lead: "Focus on the learner's reflective observation and emotional awareness.",
+      responseKey: "rubric_grade_05_2",
+      rubricMeta: {
+        rubricId: "kolb-micro-reflection-rubric-v1",
+        criterion: "Reflective Observation depth",
+        scoreLabels: [
+          { value: "1", label: "1 — Emerging" },
+          { value: "2", label: "2 — Developing" },
+          { value: "3", label: "3 — Proficient" },
+          { value: "4", label: "4 — Advanced" }
+        ]
+      },
+      exemplarPayload: {
+        title: "Exemplar B — Reflective Observation",
+        text:
+          "I felt frustrated when students ignored the peer feedback routine, but I also realized my instructions were rushed because we were behind schedule. Several students looked uncertain, and two asked classmates what to do instead of asking me. Looking back, I think my tone became sharper as the activity progressed, which likely made hesitant students even less willing to participate."
+      },
+      aiFeedbackPromptTemplate:
+        "You are calibrating rubric judgments for Kolb micro-reflections. Criterion: {{criterion}}. Grade selected: {{gradeLabel}}. Rationale: {{rationale}}. Exemplar: {{exemplar}}. Return concise feedback in 2-3 sentences with one affirming point and one actionable suggestion.",
+      aiFallbackText:
+        "AI feedback deferred. Save your draft rationale and retry when the API connection is available."
     },
     {
-      id: "5.3",
+      id: "05.3",
       section: "SECTION 5: CHATBOT APP (Standalone Micro-Reflection Exercise)",
-      type: "content",
-      badge: "Screen 3",
-      title: "Summary & Export",
-      lead: "Display learner summaries mapped to CE, RO, AC, and AE.",
-      keyPoints: [
-        "Learner can opt in to share excerpts with peers.",
-        "Learner can download a PDF export."
-      ],
-      actionPrompt: "After export, return to the slide deck to complete the module."
+      type: "rubric-grade",
+      badge: "Slide 05.3",
+      title: "Rubric Calibration: Exemplar C",
+      lead: "Evaluate how well the writer explains why the incident happened.",
+      responseKey: "rubric_grade_05_3",
+      rubricMeta: {
+        rubricId: "kolb-micro-reflection-rubric-v1",
+        criterion: "Abstract Conceptualisation linkage",
+        scoreLabels: [
+          { value: "1", label: "1 — Emerging" },
+          { value: "2", label: "2 — Developing" },
+          { value: "3", label: "3 — Proficient" },
+          { value: "4", label: "4 — Advanced" }
+        ]
+      },
+      exemplarPayload: {
+        title: "Exemplar C — Abstract Conceptualisation",
+        text:
+          "This incident reflects a mismatch between cognitive load and task framing. I expected students to apply prior knowledge independently, but the prompt required simultaneous planning, vocabulary retrieval, and peer negotiation. Vygotsky's zone of proximal development helps explain why teams with a clear peer coach progressed faster. In future, I need to scaffold the launch with worked examples before asking for independent transfer."
+      },
+      aiFeedbackPromptTemplate:
+        "You are calibrating rubric judgments for Kolb micro-reflections. Criterion: {{criterion}}. Grade selected: {{gradeLabel}}. Rationale: {{rationale}}. Exemplar: {{exemplar}}. Return concise feedback in 2-3 sentences with one affirming point and one actionable suggestion.",
+      aiFallbackText:
+        "AI feedback deferred. Save your draft rationale and retry when the API connection is available."
+    },
+    {
+      id: "05.4",
+      section: "SECTION 5: CHATBOT APP (Standalone Micro-Reflection Exercise)",
+      type: "rubric-grade",
+      badge: "Slide 05.4",
+      title: "Rubric Calibration: Exemplar D",
+      lead: "Judge whether the action plan is specific, measurable, and time-bound.",
+      responseKey: "rubric_grade_05_4",
+      rubricMeta: {
+        rubricId: "kolb-micro-reflection-rubric-v1",
+        criterion: "Active Experimentation quality",
+        scoreLabels: [
+          { value: "1", label: "1 — Emerging" },
+          { value: "2", label: "2 — Developing" },
+          { value: "3", label: "3 — Proficient" },
+          { value: "4", label: "4 — Advanced" }
+        ]
+      },
+      exemplarPayload: {
+        title: "Exemplar D — Active Experimentation",
+        text:
+          "Next Monday I will test a two-step protocol in Period 2: (1) model one complete example with think-aloud language, and (2) provide a 4-item checklist each group must complete before independent work. I will collect exit tickets asking students to rate confidence from 1-5 and name one unclear instruction. If fewer than 80% report confidence of 4 or 5, I will revise the checklist language before Wednesday's lesson."
+      },
+      aiFeedbackPromptTemplate:
+        "You are calibrating rubric judgments for Kolb micro-reflections. Criterion: {{criterion}}. Grade selected: {{gradeLabel}}. Rationale: {{rationale}}. Exemplar: {{exemplar}}. Return concise feedback in 2-3 sentences with one affirming point and one actionable suggestion.",
+      aiFallbackText:
+        "AI feedback deferred. Save your draft rationale and retry when the API connection is available."
+    },
+    {
+      id: "05.5",
+      section: "SECTION 5: CHATBOT APP (Standalone Micro-Reflection Exercise)",
+      type: "rubric-grade",
+      badge: "Slide 05.5",
+      title: "Rubric Calibration: Exemplar E",
+      lead: "Assess integration across all four phases (CE, RO, AC, AE).",
+      responseKey: "rubric_grade_05_5",
+      rubricMeta: {
+        rubricId: "kolb-micro-reflection-rubric-v1",
+        criterion: "Kolb cycle coherence",
+        scoreLabels: [
+          { value: "1", label: "1 — Emerging" },
+          { value: "2", label: "2 — Developing" },
+          { value: "3", label: "3 — Proficient" },
+          { value: "4", label: "4 — Advanced" }
+        ]
+      },
+      exemplarPayload: {
+        title: "Exemplar E — Full-cycle Coherence",
+        text:
+          "In Tuesday's reading seminar, discussion stalled after I asked for textual evidence (CE). I felt the room's energy drop and noticed students avoided eye contact when called on (RO). I now think my question was too broad and increased performance pressure; retrieval prompts should have been sequenced from literal to inferential (AC). Tomorrow I will begin with paired annotation, then use sentence starters before whole-class discussion, and compare participation data to Tuesday's baseline (AE)."
+      },
+      aiFeedbackPromptTemplate:
+        "You are calibrating rubric judgments for Kolb micro-reflections. Criterion: {{criterion}}. Grade selected: {{gradeLabel}}. Rationale: {{rationale}}. Exemplar: {{exemplar}}. Return concise feedback in 2-3 sentences with one affirming point and one actionable suggestion.",
+      aiFallbackText:
+        "AI feedback deferred. Save your draft rationale and retry when the API connection is available."
+    },
+    {
+      id: "05.6",
+      section: "SECTION 5: CHATBOT APP (Standalone Micro-Reflection Exercise)",
+      type: "rubric-grade",
+      badge: "Slide 05.6",
+      title: "Rubric Calibration: Exemplar F",
+      lead: "Identify strengths and weaknesses in evidence quality.",
+      responseKey: "rubric_grade_05_6",
+      rubricMeta: {
+        rubricId: "kolb-micro-reflection-rubric-v1",
+        criterion: "Evidence and specificity",
+        scoreLabels: [
+          { value: "1", label: "1 — Emerging" },
+          { value: "2", label: "2 — Developing" },
+          { value: "3", label: "3 — Proficient" },
+          { value: "4", label: "4 — Advanced" }
+        ]
+      },
+      exemplarPayload: {
+        title: "Exemplar F — Evidence Quality",
+        text:
+          "The lesson felt messy and students were off task. I think it happened because they did not care about the activity. Next time I will explain things better and hopefully behavior improves."
+      },
+      aiFeedbackPromptTemplate:
+        "You are calibrating rubric judgments for Kolb micro-reflections. Criterion: {{criterion}}. Grade selected: {{gradeLabel}}. Rationale: {{rationale}}. Exemplar: {{exemplar}}. Return concise feedback in 2-3 sentences with one affirming point and one actionable suggestion.",
+      aiFallbackText:
+        "AI feedback deferred. Save your draft rationale and retry when the API connection is available."
+    },
+    {
+      id: "05.7",
+      section: "SECTION 5: CHATBOT APP (Standalone Micro-Reflection Exercise)",
+      type: "rubric-grade",
+      badge: "Slide 05.7",
+      title: "Rubric Calibration: Exemplar G (Extended)",
+      lead: "This extended exemplar is intentionally long to practice close reading.",
+      responseKey: "rubric_grade_05_7",
+      rubricMeta: {
+        rubricId: "kolb-micro-reflection-rubric-v1",
+        criterion: "Analytical depth and actionability",
+        scoreLabels: [
+          { value: "1", label: "1 — Emerging" },
+          { value: "2", label: "2 — Developing" },
+          { value: "3", label: "3 — Proficient" },
+          { value: "4", label: "4 — Advanced" }
+        ]
+      },
+      exemplarPayload: {
+        title: "Exemplar G — Extended Reflection",
+        text:
+          "During our interdisciplinary project launch, I introduced the driving question and expected groups to co-construct norms within ten minutes. Instead, several groups fixated on dividing tasks quickly, and two multilingual learners withdrew from discussion. I intervened by assigning rotating roles, but the adjustment came late and momentum was uneven across the class. I felt torn between preserving student autonomy and stepping in more assertively because I could see quieter students becoming peripheral. Reviewing my notes, I realized I had framed collaboration as a product expectation rather than a process skill. Research on collaborative learning suggests students need explicit rehearsal of discourse moves, especially when language demands are high and social hierarchy is present. I also noticed my feedback favored groups producing visible artifacts, which may have reinforced speed over shared reasoning. In the next cycle, I will open with a short modeled conversation that demonstrates clarification prompts, disagreement stems, and turn-taking signals. I will then run a seven-minute rehearsal in triads using a low-stakes prompt and track participation with a simple tally rubric. By the second project lesson, I expect each learner to contribute at least once during group planning, and I will compare this data to baseline participation from this launch."
+      },
+      aiFeedbackPromptTemplate:
+        "You are calibrating rubric judgments for Kolb micro-reflections. Criterion: {{criterion}}. Grade selected: {{gradeLabel}}. Rationale: {{rationale}}. Exemplar: {{exemplar}}. Return concise feedback in 2-3 sentences with one affirming point and one actionable suggestion.",
+      aiFallbackText:
+        "AI feedback deferred. Save your draft rationale and retry when the API connection is available."
+    },
+    {
+      id: "05.8",
+      section: "SECTION 5: CHATBOT APP (Standalone Micro-Reflection Exercise)",
+      type: "rubric-grade",
+      badge: "Slide 05.8",
+      title: "Rubric Calibration: Exemplar H (Extended)",
+      lead: "Complete one final grade and compare your rationale across exemplars.",
+      responseKey: "rubric_grade_05_8",
+      rubricMeta: {
+        rubricId: "kolb-micro-reflection-rubric-v1",
+        criterion: "Overall rubric alignment",
+        scoreLabels: [
+          { value: "1", label: "1 — Emerging" },
+          { value: "2", label: "2 — Developing" },
+          { value: "3", label: "3 — Proficient" },
+          { value: "4", label: "4 — Advanced" }
+        ]
+      },
+      exemplarPayload: {
+        title: "Exemplar H — Final Calibration Piece",
+        text:
+          "I recently facilitated a Socratic seminar on migration narratives where discussion quality varied sharply by group. In one group, students built on each other's points with textual evidence; in another, contributions were isolated and repetitive. I initially interpreted this as preparation differences, yet my observation log showed both groups completed the same pre-seminar organizer. The stronger group had clearer conversational norms because I had accidentally spent more setup time with them while troubleshooting a device issue. This made me reconsider my assumption that structure should be entirely student-generated from the beginning. If cognitive and social expectations are not transparent, reflective dialogue becomes performative rather than exploratory. The incident also highlighted equity concerns: students with less confidence in academic English were less likely to initiate turns unless they had a scripted entry point. In response, I will implement a two-part protocol next week: first, an explicit mini-lesson on accountable talk moves with multilingual sentence frames; second, a facilitator checklist that requires each seminar leader to invite three distinct voices before summarizing. I will audio-sample two groups and code turn distribution to evaluate whether participation widens and whether evidence-based responses increase."
+      },
+      aiFeedbackPromptTemplate:
+        "You are calibrating rubric judgments for Kolb micro-reflections. Criterion: {{criterion}}. Grade selected: {{gradeLabel}}. Rationale: {{rationale}}. Exemplar: {{exemplar}}. Return concise feedback in 2-3 sentences with one affirming point and one actionable suggestion.",
+      aiFallbackText:
+        "AI feedback deferred. Save your draft rationale and retry when the API connection is available."
     },
     {
       id: "6.1",
