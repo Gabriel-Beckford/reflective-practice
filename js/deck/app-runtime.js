@@ -134,6 +134,25 @@ window.DeckAppRuntime = {
     if (el.apiGateStatus) el.apiGateStatus.textContent = message;
   }
 
+  function prepareApiKeyField() {
+    if (!el.apiKeyInput) return;
+    el.apiKeyInput.disabled = false;
+    el.apiKeyInput.readOnly = false;
+    el.apiKeyInput.removeAttribute("readonly");
+    el.apiKeyInput.removeAttribute("disabled");
+
+    const seededValue = String(el.apiKeyInput.value || "").trim().toLowerCase();
+    if (seededValue === "server-managed key") {
+      el.apiKeyInput.value = "";
+    }
+
+    el.apiKeyInput.addEventListener("focus", () => {
+      if (String(el.apiKeyInput.value || "").trim().toLowerCase() === "server-managed key") {
+        el.apiKeyInput.value = "";
+      }
+    });
+  }
+
   function setApiLocked(locked) {
     document.body.classList.toggle("api-locked", locked);
     if (el.apiGate) el.apiGate.hidden = !locked;
@@ -1574,6 +1593,7 @@ window.DeckAppRuntime = {
   };
 
   setApiLocked(!state.apiConnected);
+  prepareApiKeyField();
   renderSectionMenu();
   render();
 
