@@ -1477,7 +1477,9 @@ window.DeckAppRuntime = {
 
   async function testApiConnection() {
     if (state.testingConnection) return;
+    const apiKey = el.apiKeyInput?.value?.trim() || "";
     await aiService.testApiConnection({
+      apiKey,
       onStart: () => {
         state.testingConnection = true;
         if (el.apiTestBtn) el.apiTestBtn.disabled = true;
@@ -1541,6 +1543,13 @@ window.DeckAppRuntime = {
   if (el.menuClose) el.menuClose.addEventListener("click", () => toggleMenu(false));
   if (el.menuOverlay) el.menuOverlay.addEventListener("click", () => toggleMenu(false));
   if (el.apiTestBtn) el.apiTestBtn.addEventListener("click", testApiConnection);
+  if (el.apiKeyInput) {
+    el.apiKeyInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      testApiConnection();
+    });
+  }
 
   el.next.addEventListener("click", () => {
     if (!state.apiConnected) {
