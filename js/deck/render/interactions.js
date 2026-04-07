@@ -11,7 +11,6 @@
       "api-gate-confirm": "api-gate-confirm",
       "single-choice": "single-choice",
       "multi-choice": "multi-select",
-      "multi-yn": "yes-no-matrix",
       input: "free-response",
       matrix: "matrix",
       "drag-drop": "drag-drop",
@@ -20,7 +19,6 @@
       "short-answer": "short-answer",
       gapfill: "gapfill",
       linking: "linking",
-      "chatbot-route": "chatbot-route",
       "pond-game": "pond-game",
       "feedback-form": "feedback-form"
     };
