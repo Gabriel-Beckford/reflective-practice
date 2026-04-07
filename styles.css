@@ -1477,6 +1477,22 @@ main {
   padding: 0 12px;
 }
 
+.api-gate-model {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.api-gate-panel select {
+  border: 1px solid var(--md-outline-variant);
+  border-radius: 12px;
+  height: 40px;
+  padding: 0 12px;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
 .api-gate-status {
   font-weight: 600;
 }
