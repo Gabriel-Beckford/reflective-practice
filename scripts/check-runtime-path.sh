@@ -16,17 +16,17 @@ for file in "${required_entrypoints[@]}"; do
   fi
 done
 
-if rg -n '<script[^>]+src="app\.js"' index.html >/dev/null; then
+if grep -qE '<script[^>]+src="app\.js"' index.html; then
   echo 'ERROR: index.html references deprecated app.js.'
   exit 1
 fi
 
-if ! rg -n '<script[^>]+src="deck-data\.js"' index.html >/dev/null; then
+if ! grep -qE '<script[^>]+src="deck-data\.js"' index.html; then
   echo 'ERROR: index.html is missing deck-data.js script tag.'
   exit 1
 fi
 
-if ! rg -n '<script[^>]+src="deck\.js"' index.html >/dev/null; then
+if ! grep -qE '<script[^>]+src="deck\.js"' index.html; then
   echo 'ERROR: index.html is missing deck.js script tag.'
   exit 1
 fi

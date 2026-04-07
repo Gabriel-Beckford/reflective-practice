@@ -1,7 +1,7 @@
 (() => {
-  const GEMINI_MODEL = "gemini-1.5-flash";
-  const GEMINI_DIRECT_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+  const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
   const SESSION_KEY = "gemini_api_key";
+  const SESSION_MODEL_KEY = "gemini_model";
 
   class DeckAiError extends Error {
     constructor(code, message, details = {}) {
@@ -31,6 +31,41 @@
       try { sessionStorage.setItem(SESSION_KEY, key); } catch { /* ignore */ }
     }
 
+    function getStoredModel() {
+      try { return sessionStorage.getItem(SESSION_MODEL_KEY) || ""; } catch { return ""; }
+    }
+
+    function storeModel(model) {
+      try { sessionStorage.setItem(SESSION_MODEL_KEY, model); } catch { /* ignore */ }
+    }
+
+    function pickDefaultModel(models) {
+      const preferred = [
+        "gemini-2.0-flash", "gemini-2.0-flash-lite",
+        "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro"
+      ];
+      for (const p of preferred) {
+        if (models.some(m => m.id === p)) return p;
+      }
+      return models[0]?.id || "gemini-2.0-flash";
+    }
+
+    async function listModels(apiKey) {
+      const response = await fetchImpl(
+        `${GEMINI_BASE_URL}/models?key=${encodeURIComponent(apiKey)}`
+      );
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new DeckAiError(String(response.status), payload?.error?.message || "Failed to list models.", payload);
+      }
+      return (payload.models || [])
+        .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes("generateContent"))
+        .map(m => ({
+          id: m.name.replace(/^models\//, ""),
+          displayName: m.displayName || m.name
+        }));
+    }
+
     function buildPrompt({ phaseKey, turnCount, transcript }) {
       const history = (Array.isArray(transcript) ? transcript : [])
         .map((entry) => `${entry.role}: ${String(entry.content || "").slice(0, 280)}`)
@@ -51,10 +86,11 @@
     }
 
     async function callGeminiDirect({ prompt, apiKey, timeoutMs = 12000 }) {
+      const model = getStoredModel() || "gemini-2.0-flash";
       const abort = new AbortController();
       const timer = setTimeout(() => abort.abort(), timeoutMs);
       try {
-        const url = new URL(GEMINI_DIRECT_URL);
+        const url = new URL(`${GEMINI_BASE_URL}/models/${model}:generateContent`);
         url.searchParams.set("key", apiKey);
         const response = await fetchImpl(url.toString(), {
           method: "POST",
@@ -124,13 +160,15 @@
       try {
         onStart?.();
         if (typeof apiKey === "string" && apiKey.trim()) {
-          const data = await callGeminiDirect({
-            prompt: 'Return JSON: {"ok":true}',
-            apiKey: apiKey.trim()
-          });
-          storeKey(apiKey.trim());
-          onSuccess?.(data);
-          return { ok: true, payload: data };
+          const key = apiKey.trim();
+          const models = await listModels(key);
+          const stored = getStoredModel();
+          const selectedModel = (stored && models.some(m => m.id === stored)) ? stored : pickDefaultModel(models);
+          storeModel(selectedModel);
+          await callGeminiDirect({ prompt: 'Return JSON: {"ok":true}', apiKey: key });
+          storeKey(key);
+          onSuccess?.({ ok: true, models, selectedModel });
+          return { ok: true, payload: { models, selectedModel } };
         }
         const storedKey = getStoredKey();
         const payloadBody = storedKey ? { apiKey: storedKey } : {};
@@ -153,7 +191,7 @@
       }
     }
 
-    return { DeckAiError, mapDeckAiError, requestDeckAi, testApiConnection };
+    return { DeckAiError, mapDeckAiError, requestDeckAi, testApiConnection, storeModel };
   }
 
   window.DeckModules = window.DeckModules || {};

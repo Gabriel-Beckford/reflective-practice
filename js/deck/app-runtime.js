@@ -106,7 +106,9 @@ window.DeckAppRuntime = {
     apiGate: document.getElementById("api-gate"),
     apiKeyInput: document.getElementById("api-key-input"),
     apiTestBtn: document.getElementById("api-test-btn"),
-    apiGateStatus: document.getElementById("api-gate-status")
+    apiGateStatus: document.getElementById("api-gate-status"),
+    modelSelect: document.getElementById("model-select"),
+    apiGateModel: document.getElementById("api-gate-model")
   };
 
   if (storyboardMode) {
@@ -167,6 +169,19 @@ window.DeckAppRuntime = {
       setAvatarState("idle", "Connected and ready.");
       setConnectionMessage("AI connection established. You can navigate freely.", true);
     }
+  }
+
+  function populateModelSelect(models, selectedModel) {
+    if (!el.modelSelect || !el.apiGateModel) return;
+    el.modelSelect.innerHTML = "";
+    models.forEach(({ id, displayName }) => {
+      const opt = document.createElement("option");
+      opt.value = id;
+      opt.textContent = displayName;
+      if (id === selectedModel) opt.selected = true;
+      el.modelSelect.appendChild(opt);
+    });
+    el.apiGateModel.hidden = false;
   }
 
   const inclusionResolver = window.DeckModules.navigationRouter.createInclusionResolver({
@@ -1486,9 +1501,10 @@ window.DeckAppRuntime = {
         setConnectionMessage("Testing connection via /api/gemini/test...", false);
         setAvatarState("thinking", "Testing connection.");
       },
-      onSuccess: () => {
+      onSuccess: (payload) => {
       state.apiConnected = true;
       store.setSessionConnected(true);
+      if (payload?.models?.length) populateModelSelect(payload.models, payload.selectedModel);
       setAvatarState("responding", "Connection successful.");
       setConnectionMessage("Connected. Deck navigation unlocked.", true);
       setApiLocked(false);
@@ -1548,6 +1564,11 @@ window.DeckAppRuntime = {
       if (event.key !== "Enter") return;
       event.preventDefault();
       testApiConnection();
+    });
+  }
+  if (el.modelSelect) {
+    el.modelSelect.addEventListener("change", () => {
+      aiService.storeModel(el.modelSelect.value);
     });
   }
 
