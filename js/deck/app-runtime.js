@@ -4,7 +4,6 @@ window.DeckAppRuntime = {
   const RESPONSE_REQUIRED_TYPES = new Set([
     "single-choice",
     "multi-choice",
-    "multi-yn",
     "input",
     "drag-drop",
     "pelmanism",
@@ -1360,7 +1359,6 @@ window.DeckAppRuntime = {
     "interactive-diagram",
     "padlet-embed",
     "ai-chat",
-    "chatbot-route",
     "pond-game"
   ]);
 
