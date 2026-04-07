@@ -789,7 +789,14 @@ window.DeckAppRuntime = {
   }
 
   async function requestDeckAi({ transcript, mode = "deck", phaseKey, turnCount = 1 }) {
-    return aiService.requestDeckAi({ transcript, mode, phaseKey, turnCount, resolvePhaseKey: resolveDeckAiPhaseKey });
+    return aiService.requestDeckAi({
+      transcript,
+      mode,
+      phaseKey,
+      turnCount,
+      resolvePhaseKey: resolveDeckAiPhaseKey,
+      apiKey: getApiKeyInputValue()
+    });
   }
 
   function createInteractionContext() {
@@ -1456,9 +1463,16 @@ window.DeckAppRuntime = {
   const getPrevIndex = router.resolvePrevIndex;
   const jumpTo = router.jumpTo;
 
+
+  function getApiKeyInputValue() {
+    if (!el.apiKeyInput) return "";
+    return String(el.apiKeyInput.value || "").trim();
+  }
+
   async function testApiConnection() {
     if (state.testingConnection) return;
     await aiService.testApiConnection({
+      apiKey: getApiKeyInputValue(),
       onStart: () => {
         state.testingConnection = true;
         if (el.apiTestBtn) el.apiTestBtn.disabled = true;

@@ -19,7 +19,7 @@
       });
     }
 
-    async function requestDeckAi({ transcript, mode = "deck", phaseKey, turnCount = 1, resolvePhaseKey }) {
+    async function requestDeckAi({ transcript, mode = "deck", phaseKey, turnCount = 1, resolvePhaseKey, apiKey }) {
       try {
         const response = await fetchImpl("/api/gemini/chat", {
           method: "POST",
@@ -28,7 +28,8 @@
             phaseKey: phaseKey || resolvePhaseKey?.() || "RO",
             turnCount,
             transcript: Array.isArray(transcript) ? transcript : [],
-            mode
+            mode,
+            apiKey: apiKey || undefined
           })
         });
         const payload = await response.json().catch(() => ({}));
@@ -44,13 +45,13 @@
       }
     }
 
-    async function testApiConnection({ onStart, onSuccess, onFailure, onFinally }) {
+    async function testApiConnection({ onStart, onSuccess, onFailure, onFinally, apiKey }) {
       try {
         onStart?.();
         const response = await fetchImpl("/api/gemini/test", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({})
+          body: JSON.stringify({ apiKey: apiKey || undefined })
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
