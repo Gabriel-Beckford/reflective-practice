@@ -91,8 +91,10 @@ function buildAssistantPrompt({ phaseKey, turnCount, transcript }) {
   ].join("\n");
 }
 
-async function callGemini({ prompt, timeoutMs = 12000 }) {
-  if (!GEMINI_API_KEY) {
+async function callGemini({ prompt, timeoutMs = 12000, apiKey }) {
+  const resolvedApiKey = typeof apiKey === "string" && apiKey.trim() ? apiKey.trim() : GEMINI_API_KEY;
+
+  if (!resolvedApiKey) {
     return { error: { code: "not_configured", message: "Server Gemini credentials are not configured." } };
   }
 
@@ -101,7 +103,7 @@ async function callGemini({ prompt, timeoutMs = 12000 }) {
 
   try {
     const endpoint = new URL(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`);
-    endpoint.searchParams.set("key", GEMINI_API_KEY);
+    endpoint.searchParams.set("key", resolvedApiKey);
 
     const response = await fetch(endpoint, {
       method: "POST",
@@ -161,7 +163,8 @@ async function handleApi(req, res, pathname) {
   }
 
   if (pathname === "/api/gemini/test") {
-    const result = await callGemini({ prompt: "Return JSON: {\"ok\":true}" });
+    const requestApiKey = typeof body?.apiKey === "string" ? body.apiKey : "";
+    const result = await callGemini({ prompt: "Return JSON: {\"ok\":true}", apiKey: requestApiKey });
     if (result.error) {
       safeTelemetry("gemini_test_failed", { code: result.error.code });
       sendJson(res, 502, result.error);

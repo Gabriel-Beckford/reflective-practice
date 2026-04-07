@@ -44,13 +44,17 @@
       }
     }
 
-    async function testApiConnection({ onStart, onSuccess, onFailure, onFinally }) {
+    async function testApiConnection({ apiKey, onStart, onSuccess, onFailure, onFinally }) {
       try {
         onStart?.();
+        const payloadBody = {};
+        if (typeof apiKey === "string" && apiKey.trim()) {
+          payloadBody.apiKey = apiKey.trim();
+        }
         const response = await fetchImpl("/api/gemini/test", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({})
+          body: JSON.stringify(payloadBody)
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
