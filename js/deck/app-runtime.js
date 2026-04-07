@@ -1498,9 +1498,9 @@ window.DeckAppRuntime = {
       onFailure: (error) => {
       state.apiConnected = false;
       store.setSessionConnected(false);
+      setApiLocked(true);
       setAvatarState("responding", "Connection failed.");
       setConnectionMessage(`Connection failed: ${error.message}`, false);
-      setApiLocked(true);
       },
       onFinally: () => {
         state.testingConnection = false;
